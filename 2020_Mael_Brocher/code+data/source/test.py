@@ -3,7 +3,7 @@ from wordninja import wordninja
 from fr_word_segment import wordseg
 
 nlp = spacy.load("fr_core_news_sm")
-wordninja.DEFAULT_LANGUAGE_MODEL = wordninja.LanguageModel('./wordlists/wordlist-fr.txt.gz')
+wordninja.DEFAULT_LANGUAGE_MODEL = wordninja.LanguageModel('./wordlists/frfreq.txt.gz')
 
 with open("../data/richelieu-master/french_passwords_top1000.txt") as myfile:
     head = [next(myfile).strip('\n') for x in range(1000)]
