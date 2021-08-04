@@ -735,8 +735,12 @@ var ParacoordUI = function (config, options) {
                 url: "http://127.0.0.1:5000/uploadHeatmap",
                 async: true,
                 data: { mydata: dataS },
+            }).done(function (data) {
+                console.log(data.responseText + " done is ready in every language")
+            }).fail(function (data) {
+                console.log(data.responseText + " fail is ready in every language")
             }).always(function (data) {
-                console.log(data.responseText + "is ready in every language")
+                console.log(data.responseText + " always is ready in every language")
             });
         }
         runPyScriptUploadHeatmap(Object.keys(words), name);
