@@ -616,6 +616,10 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         return heatmap.getState();
     }
 
+    var getName = function () {
+        return heatmap.getName()    
+    }
+
     var getWords = function () {
         return heatmap.getWords();
     }
@@ -761,6 +765,8 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         getState: getState,
         getStrength: getStrength,
         getSelectedWords: getSelectedWords,
+
+        getName: getName,
 
         getWords: getWords,
         reOrderAxis: reOrderAxis,

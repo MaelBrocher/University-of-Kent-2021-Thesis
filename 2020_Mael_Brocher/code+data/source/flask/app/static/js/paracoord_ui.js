@@ -286,6 +286,11 @@ var ParacoordUI = function (config, options) {
         exp.btnSemanticEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic').attr('style', "margin-right:7px")
         exp.btnSemanticDe = semanticMenu.append('button').attr('id', 'btnSemanticDe').text('German Semantic').attr('style', "margin-right:7px")
 
+        exp.btnSemanticFrV2 = semanticMenu.append('button').attr('id', 'btnSemanticFr').text('French Semantic v2').attr('style', "margin-right:7px")
+        exp.btnSemanticEnV2 = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic v2').attr('style', "margin-right:7px")
+        exp.btnSemanticDeV2 = semanticMenu.append('button').attr('id', 'btnSemanticDe').text('German Semantic v2').attr('style', "margin-right:7px")
+
+
         exp.btnSemanticFr.on('click', function () {
             CreateSemantics('fr');
             updateHeatmapCore();
@@ -296,6 +301,19 @@ var ParacoordUI = function (config, options) {
         });
         exp.btnSemanticDe.on('click', function () {
             CreateSemantics('de');
+            updateHeatmapCore();
+        });
+
+        exp.btnSemanticFrV2.on('click', function () {
+            getSemanticsFromUpload('fr');
+            updateHeatmapCore();
+        });
+        exp.btnSemanticEnV2.on('click', function () {
+            getSemanticsFromUpload('en');
+            updateHeatmapCore();
+        });
+        exp.btnSemanticDeV2.on('click', function () {
+            getSemanticsFromUpload('de');
             updateHeatmapCore();
         });
 
@@ -470,6 +488,29 @@ var ParacoordUI = function (config, options) {
             }
         }
         return selected;
+    }
+
+    var getSemanticsFromUpload = function (lang) {
+        function runPyScriptSemantic2(input, lang, callback) {
+            var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
+            $.ajax({
+                crossDomain: true,
+                type: "POST",
+                url: "http://127.0.0.1:5000/semantic2",
+                async: true,
+                data: { mydata: dataS },
+                success: callback
+            });
+
+        }
+        function printAndCallback(result) {
+            console.log(result)
+        };
+        var selected = getSelected();
+        for (var i = 0; i < selected.length; i++) {
+            var datatosend = selected[i].getName();
+            runPyScriptSemantic2(datatosend, lang, printAndCallback);
+        }
     }
 
     var CreateSemantics = function (lang) {
@@ -682,6 +723,24 @@ var ParacoordUI = function (config, options) {
         }
     }
 
+    var uploadWords = function (name, words) {
+        function runPyScriptUploadHeatmap(input, name) {
+            var dataS = name + "2431ecfe25e234d51b22ff47701d0fae";
+            for (i = 0; i < input.length; i++) {
+                dataS += input[i] + "2431ecfe25e234d51b22ff47701d0fae"
+            }
+            $.ajax({
+                crossDomain: true,
+                type: "POST",
+                url: "http://127.0.0.1:5000/uploadHeatmap",
+                async: true,
+                data: { mydata: dataS },
+            }).always(function (data) {
+                console.log(data.responseText + "is ready in every language")
+            });
+        }
+        runPyScriptUploadHeatmap(Object.keys(words), name);
+    }
 
     var readFiles = function (files, delim, callback) {
         // if (config.debug) out('readFiles')
@@ -737,8 +796,8 @@ var ParacoordUI = function (config, options) {
                 var hm = new Heatmap(files[n].name);
                 hm.buildHeatmap(rawData, false);
                 var hmui = new HeatmapUI(hm, self, config, options);
-
                 uploadComplete(hmui);
+                uploadWords(files[n].name, hm.getWords())
             } else {
                 out('function:readFiles(files, delim, callback) - ERROR Unknown delim');
             }
