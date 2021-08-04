@@ -2,6 +2,6 @@
 2020_Mael_Brocher/code+data/source/wordlists/frwiktionary.txt
 *.pyc
 2020_Mael_Brocher/code+data/source/app/__pycache__/
-2020_Mael_Brocher/code+data/source/env/
+2020_Mael_Brocher/code+data/source/flask/env/
 2020_Mael_Brocher/code+data/source/wordninja/__pycache__/
 

@@ -1,28 +1,44 @@
 import spacy
-from wordninja import wordninja
-from fr_word_segment import wordseg
+from wordninja import wordninjaFr
+import time
+import threading
+import numpy as np
 
 nlp = spacy.load("fr_core_news_sm")
-wordninja.DEFAULT_LANGUAGE_MODEL = wordninja.LanguageModel('./wordlists/frfreq.txt.gz')
 
-with open("../data/richelieu-master/french_passwords_top1000.txt") as myfile:
-    head = [next(myfile).strip('\n') for x in range(1000)]
-wordlist = head
+class MyThread (threading.Thread):
+    def __init__(self, tab, words, part):
+        threading.Thread.__init__(self)
+        self.tab = tab
+        self.words = words
+        self.part = part
+
+    def run(self):
+        for passw in self.words :
+            res = " ".join(wordninjaFr.split(passw))
+            doc = nlp(res)
+            for i, token in enumerate(doc):
+                self.tab[token.pos_][i] += 1
+
+    def ret(self):
+        return self.tab
+
+f = open("../data/pword-w-count/10k most common with frequency.txt", encoding='latin1')
+wordlist = f.read().split('\n')
+keys = ["ADJ","ADV","INTJ","NOUN","PROPN","VERB","ADP","AUX","CONJ","CCONJ","DET","NUM","PART","PRON","SCONJ","PUNCT","SYM", "X"]
 tab = {}
-for passw in wordlist :
-    testme = " ".join(wordninja.split(passw))
-    doc = nlp(testme)
-    for i , token in enumerate(doc):
-        try:
-            tab[token.pos_]
-        except KeyError:
-            num = [0] * (int(i)+1)
-            num[i] = 1
-            tab[token.pos_] = num
-        else:
-            if i >= len(tab[token.pos_]):
-                for j in range(i - len(tab[token.pos_]) +1):
-                    tab[token.pos_].append(0)             
-            tab[token.pos_][i] += 1
+for key in keys:
+    tab[key] = [0] * 16
+
+wsize = len(wordlist)
+start_time = time.time()
+for a, passw in enumerate(wordlist) :
+    res = " ".join(wordninjaFr.split(passw))
+    doc = nlp(res)
+    for i, token in enumerate(doc):
+        tab[token.pos_][i] += 1
+print("--- {} seconds ---".format((time.time() - start_time)))
+#for t in threads:
+#    print(t.ret())
 print(tab)
         

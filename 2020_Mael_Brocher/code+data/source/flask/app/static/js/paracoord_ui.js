@@ -473,48 +473,30 @@ var ParacoordUI = function (config, options) {
     }
 
     var CreateSemantics = function (lang) {
-        function runPyScriptSemantic(input, lang) {
+        function runPyScriptSemantic(input, lang, callback) {
             var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae";
             for (i = 0; i < input.length; i++) {
                 dataS += input[i] + "2431ecfe25e234d51b22ff47701d0fae"
             }
-            var jqXHR = $.ajax({
+            $.ajax({
                 crossDomain: true,
                 type: "POST",
                 url: "http://127.0.0.1:5000/semantic",
-                async: false,
+                async: true,
                 data: { mydata: dataS },
+                success: callback
             });
 
-            return jqXHR.responseText;
         }
-        function runPyScriptTest(input) {
-            var dataS = ""
-            for (i = 0; i < input.length; i++) {
-                dataS += input[i] + "2431ecfe25e234d51b22ff47701d0fae"
-            }
-            var jqXHR = $.ajax({
-                type: "POST",
-                url: "http://127.0.0.1:5000/test",
-                async: false,
-                data: { mydata: dataS }
-            });
-
-            return jqXHR.responseText;
-        }
-        d3.select('loaderbg').style('visibility', 'visible');
+        function printAndCallback(result) {
+            console.log(result)
+        };
         var selected = getSelected();
         for (var i = 0; i < selected.length; i++) {
             var datatosend = selected[i].getWords();
             console.log(Object.keys(datatosend))
-            var result = runPyScriptSemantic(Object.keys(datatosend), lang);
-            console.log(result)
-
+            runPyScriptSemantic(Object.keys(datatosend), lang, printAndCallback);
         }
-        d3.select('loaderbg').style('visibility', 'hidden');
-
-        //        console.log(runPyScriptTest(["bonjour", "motdepasse"]))
-        //        console.log(runPyScriptSemantic(["bonjour", "motdepasse"]))
     }
 
     var updateHeatmapColour = function () {
