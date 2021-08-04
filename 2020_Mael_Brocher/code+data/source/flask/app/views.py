@@ -9,6 +9,7 @@ from wordninja import wordninjaFr
 from wordninja import wordninjaDe
 from time import sleep
 import threading
+import langid
 
 frenchSpacy = spacy.load("fr_core_news_sm")
 germanSpacy = spacy.load("de_core_news_sm")
@@ -32,8 +33,13 @@ class MyThread (threading.Thread):
         for passw in self.wordlist:
             res = " ".join(wordninja.split(passw))
             doc = nlp(res)
-            for i, token in enumerate(doc):
-                self.tab[token.pos_][i] += 1
+            detect = langid.classify(res)
+            if detect[0] == self.lang:
+                for i, token in enumerate(doc):
+                    try:
+                        self.tab[token.pos_][i] += 1
+                    except IndexError:
+                        pass
         self.running = False
 
     def getRunning(self):
@@ -98,10 +104,9 @@ def uploadHeatmap():
         wordlist = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
         hname = wordlist[0]
         wordlist.pop(0)
-        tab = tabGenerator()
-        tFr = MyThread(tab, wordlist, 'fr')
-        tDe = MyThread(tab, wordlist, 'de')
-        tEn = MyThread(tab, wordlist, 'en')
+        tFr = MyThread(tabGenerator(), wordlist, 'fr')
+        tDe = MyThread(tabGenerator(), wordlist, 'de')
+        tEn = MyThread(tabGenerator(), wordlist, 'en')
     
         tFr.start()
         tDe.start()
@@ -174,11 +179,13 @@ def classify():
         for passw in wordlist:
             res = " ".join(wordninja.split(passw))
             doc = nlp(res)
-            for i, token in enumerate(doc):
-                try:
-                    tab[token.pos_][i] += 1
-                except IndexError:
-                    pass
+            detect = langid.classify(res)
+            if detect[0] == lang:
+                for i, token in enumerate(doc):
+                    try:
+                        tab[token.pos_][i] += 1
+                    except IndexError:
+                        pass
         resp = make_response(tab)
         resp.headers['Content-Type'] = "application/json"
         resp.headers.add('Access-Control-Allow-Origin', '*')
