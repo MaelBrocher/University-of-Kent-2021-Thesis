@@ -310,7 +310,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         }
         for (x = 0; x < charSet.length; x++) {
             var c = charSet[x]
-
+            SemanticTab = heatmap.getSemantic()
             //x axis labels and line
             ui.svg.append('text').attr('id', '_' + c + '_').attr('width', cw).attr('height', hh).attr('x', (x * cw) + hw + cw / 2).attr('y', hh - hh / 2).style('alignment-baseline', 'central').style('text-anchor', 'middle').text(c)
             ui.svg.append('line').attr('x1', (x * cw) + hw).attr('y1', 0).attr('x2', (x * cw) + hw).attr('y2', hh).style('stroke', 'grey').style('stroke-width', '.5');
@@ -327,22 +327,28 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 //Cells
                 ui.svg.append('g').append('rect').attr('class', 'cell').attr('id', '_' + c + '_' + pos).attr('x', (x * cw) + hw).attr('y', (y * ch) + hh).attr('width', cw).attr('height', ch).style('stroke', 'grey').style('fill', 'none').attr('width', cw).attr('height', ch).style('stroke-width', '0')
                     .on('mouseover', function (d) {
-                        parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, false);
+                        if (isSemantic)
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab[d.c][d.pos-1]}, false);
+                        else
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, false);
                     })
                     .on('mouseout', function (d) {
-                        parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, true);
+                        if (isSemantic)
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab[d.c][d.pos-1]}, true);
+                        else
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, true);
                     });
                 try {
                     var cfreq = 0
                     if (isSemantic == true) {
-                        cfreq = SemanticTab[c][pos]
+                        cfreq = SemanticTab[c][pos-1]
                     }
                     else {
                         cfreq = state.position[pos].chars[c];
                     }
                     maxFreq = (maxFreq < cfreq) ? cfreq : maxFreq;
                     datum.push({ 'c': c, 'pos': pos, 'freq': cfreq });
-            } catch (err) {
+                } catch (err) {
                     datum.push({ 'c': c, 'pos': pos, 'freq': undefined });
                 }
             }

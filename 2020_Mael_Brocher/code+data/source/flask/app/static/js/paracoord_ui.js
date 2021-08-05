@@ -493,7 +493,7 @@ var ParacoordUI = function (config, options) {
                 names += "\n" + name
             }
             else 
-                runPyScriptSemantic2(name, lang, selected[i]);
+                runPyScriptSemantic2(name, lang, selected[i])
         }
         if (names != "Semantic not ready for :") {
             var x = document.getElementById("toast")
@@ -502,10 +502,14 @@ var ParacoordUI = function (config, options) {
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 5000);
         }
         else {
+            var selected = getSelected();
             for (var i = 0; i < selected.length; i++) {
+                console.log(selected[i].getSemantic())
                 var newhm = new Heatmap(lang + " semantic of " + selected[i].getName());
                 newhm.isSemantic = true
                 newhm.buildHeatmap(selected[i].getWords());
+                newhm.setSemantic(selected[i].getSemantic(), lang)
+                console.log(newhm.getSemantic())
                 var hmui = new HeatmapUI(newhm, self, config, options);
                 uploadComplete(lang + " semantic of " + selected[i].getName(), selected[i].getWords(), hmui);
             }
@@ -906,7 +910,11 @@ var ParacoordUI = function (config, options) {
             } else {
                 freq = "0";
                 try {
-                    freq = heatmaps[i].getState().position[d.pos].chars[d.c];
+                    if (d.semantic == true) {
+                        freq = d.value
+                    }
+                    else
+                        freq = heatmaps[i].getState().position[d.pos].chars[d.c];
                 } catch (err) { out(err) }
 
                 rect.style('stroke', 'black').style('stroke-width', '1')

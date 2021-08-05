@@ -37,22 +37,10 @@ class LanguageModel(object):
     out = []
     i = len(s)
     while i>0:
-      c,k = best_match(i)
-      assert c == cost[i]
-      # Apostrophe and digit handling (added by Genesys)
-      newToken = True
-      if not s[i-k:i] == "'": # ignore a lone apostrophe
-        if len(out) > 0:
-          # re-attach split 's and split digits
-          if out[-1] == "'s" or (s[i-1].isdigit() and out[-1][0].isdigit()): # digit followed by digit
-            out[-1] = s[i-k:i] + out[-1] # combine current token with previous token
-            newToken = False
-      # (End of Genesys addition)
-
-      if newToken:
+        c,k = best_match(i)
+        assert c == cost[i]
         out.append(s[i-k:i])
-
-      i -= k
+        i -= k
 
     return reversed(out)
 
@@ -62,4 +50,6 @@ _SPLIT_RE = re.compile(r"\s+")
 def split(s):
   return DEFAULT_LANGUAGE_MODEL.split(s)
 
+def _split(s):
+  return DEFAULT_LANGUAGE_MODEL._split(s)
 
