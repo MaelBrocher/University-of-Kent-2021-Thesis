@@ -25,6 +25,7 @@ var ParacoordUI = function (config, options) {
         initShortcutKeys();
 
         d3.select('body').append('div').attr('class', 'loaderbg').style('visibility', 'hidden').append('div').attr('class', 'loader').text('Loading... Please Wait...');
+        d3.select('body').append('div').attr('id', 'toast').append('div').attr('id', 'desc');
         ui.heatmapContainer = d3.select('body').append('div').attr('class', 'heatmapContainer');
 
         loadConfig(config);
@@ -435,7 +436,6 @@ var ParacoordUI = function (config, options) {
                 words = words.concat(selected[i].getSelectedWords());
                 selected[i].removeWords(words);
             }
-
             selectedWordContainer.html("");
         })
 
@@ -488,9 +488,20 @@ var ParacoordUI = function (config, options) {
             console.log(result)
         };
         var selected = getSelected();
+        var names = "Semantic not ready for :"
         for (var i = 0; i < selected.length; i++) {
-            var datatosend = selected[i].getName();
-            runPyScriptSemantic2(datatosend, lang, printAndCallback);
+            var name = selected[i].getName();
+            if (document.getElementById('loadertxt'+name).innerText == "Semantic loading...") {
+                names += "\n" + name
+            }
+            else 
+                runPyScriptSemantic2(name, lang, printAndCallback);
+        }
+        if (names != "Semantic not ready for ") {
+            var x = document.getElementById("toast")
+            x.className = "show";
+            x.innerText = names;
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 5000);
         }
     }
 
@@ -717,9 +728,9 @@ var ParacoordUI = function (config, options) {
                 async: true,
                 data: { mydata: dataS },
             }).always(function (data) {
-                document.getElementById('loadertxt').innerText = "Semantic is ready"
-                document.getElementById('loader').style.visibility = 'hidden';
-                document.getElementById('ready').style.visibility = 'visible';
+                document.getElementById('loadertxt'+name).innerText = "Semantic is ready"
+                document.getElementById('loader'+name).style.visibility = 'hidden';
+                document.getElementById('ready'+name).style.visibility = 'visible';
             });
         }
         runPyScriptUploadHeatmap(Object.keys(words), name, hmui);
