@@ -286,37 +286,18 @@ var ParacoordUI = function (config, options) {
         exp.btnSemanticEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic').attr('style', "margin-right:7px")
         exp.btnSemanticDe = semanticMenu.append('button').attr('id', 'btnSemanticDe').text('German Semantic').attr('style', "margin-right:7px")
 
-        exp.btnSemanticFrV2 = semanticMenu.append('button').attr('id', 'btnSemanticFr').text('French Semantic v2').attr('style', "margin-right:7px")
-        exp.btnSemanticEnV2 = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic v2').attr('style', "margin-right:7px")
-        exp.btnSemanticDeV2 = semanticMenu.append('button').attr('id', 'btnSemanticDe').text('German Semantic v2').attr('style', "margin-right:7px")
-
-
         exp.btnSemanticFr.on('click', function () {
-            CreateSemantics('fr');
-            updateHeatmapCore();
-        });
-        exp.btnSemanticEn.on('click', function () {
-            CreateSemantics('en');
-            updateHeatmapCore();
-        });
-        exp.btnSemanticDe.on('click', function () {
-            CreateSemantics('de');
-            updateHeatmapCore();
-        });
-
-        exp.btnSemanticFrV2.on('click', function () {
             getSemanticsFromUpload('fr');
             updateHeatmapCore();
         });
-        exp.btnSemanticEnV2.on('click', function () {
+        exp.btnSemanticEn.on('click', function () {
             getSemanticsFromUpload('en');
             updateHeatmapCore();
         });
-        exp.btnSemanticDeV2.on('click', function () {
+        exp.btnSemanticDe.on('click', function () {
             getSemanticsFromUpload('de');
             updateHeatmapCore();
         });
-
 
 
         exp.btnAxisOrderApply.on('click', function () {
@@ -723,7 +704,7 @@ var ParacoordUI = function (config, options) {
         }
     }
 
-    var uploadWords = function (name, words) {
+    var uploadWords = function (name, words, hmui) {
         function runPyScriptUploadHeatmap(input, name) {
             var dataS = name + "2431ecfe25e234d51b22ff47701d0fae";
             for (i = 0; i < input.length; i++) {
@@ -735,15 +716,13 @@ var ParacoordUI = function (config, options) {
                 url: "http://127.0.0.1:5000/uploadHeatmap",
                 async: true,
                 data: { mydata: dataS },
-            }).done(function (data) {
-                console.log(data.responseText + " done is ready in every language")
-            }).fail(function (data) {
-                console.log(data.responseText + " fail is ready in every language")
             }).always(function (data) {
-                console.log(data.responseText + " always is ready in every language")
+                document.getElementById('loadertxt').innerText = "Semantic is ready"
+                document.getElementById('loader').style.visibility = 'hidden';
+                document.getElementById('ready').style.visibility = 'visible';
             });
         }
-        runPyScriptUploadHeatmap(Object.keys(words), name);
+        runPyScriptUploadHeatmap(Object.keys(words), name, hmui);
     }
 
     var readFiles = function (files, delim, callback) {
@@ -801,7 +780,7 @@ var ParacoordUI = function (config, options) {
                 hm.buildHeatmap(rawData, false);
                 var hmui = new HeatmapUI(hm, self, config, options);
                 uploadComplete(hmui);
-                uploadWords(files[n].name, hm.getWords())
+                uploadWords(files[n].name, hm.getWords(), hmui)
             } else {
                 out('function:readFiles(files, delim, callback) - ERROR Unknown delim');
             }

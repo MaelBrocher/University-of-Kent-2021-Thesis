@@ -36,7 +36,9 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         ui.btnParent = div.append('button').attr('class', 'btnParent').text('Parent').property('disabled', true);
         ui.btnChild = div.append('button').attr('class', 'btnChild').text('Child').property('disabled', true);
         ui.btnCopyHM = div.append('button').attr('class', 'copyHeatmap').text('Copy');
-
+        ui.loader = div.append('div').attr('class', 'loaderheatmap').attr('id', 'loader').style('visibility', 'visible')
+        ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready').style('visibility', 'hidden')
+        ui.loadertxt = div.append('div').attr('id', 'loadertxt').attr('class', 'loadertext').text("Semantic loading...")
 
         parentui.updateSelected();
         ui.btnSelect.on('click', function () {
@@ -287,7 +289,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var fs = config.fs;
         var flipy = config.flipy;
         var axisOrder = state.axisOrder;
-//        console.log("Draw Heatmap " + axisOrder)
+        //        console.log("Draw Heatmap " + axisOrder)
         var maxLength = (config.maxLength == -1) ? state.maxLength : config.maxLength;
         var charSet = options.charSet[config.charSet];
         var maxFreq = 0;
@@ -617,7 +619,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
     }
 
     var getName = function () {
-        return heatmap.getName()    
+        return heatmap.getName()
     }
 
     var getWords = function () {
