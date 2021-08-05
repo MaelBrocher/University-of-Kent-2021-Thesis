@@ -36,10 +36,11 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         ui.btnParent = div.append('button').attr('class', 'btnParent').text('Parent').property('disabled', true);
         ui.btnChild = div.append('button').attr('class', 'btnChild').text('Child').property('disabled', true);
         ui.btnCopyHM = div.append('button').attr('class', 'copyHeatmap').text('Copy');
-        ui.loader = div.append('div').attr('class', 'loaderheatmap').attr('id', 'loader'+ heatmap.getName()).style('visibility', 'visible')
-        ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready' + heatmap.getName()).style('visibility', 'hidden')
-        ui.loadertxt = div.append('div').attr('class', 'loadertext').attr('id', 'loadertxt'+ heatmap.getName()).text("Semantic loading...")
-
+        if (heatmap.isSemantic == false) {
+            ui.loader = div.append('div').attr('class', 'loaderheatmap').attr('id', 'loader'+ heatmap.getName()).style('visibility', 'visible')
+            ui.loadertxt = div.append('div').attr('class', 'loadertext').attr('id', 'loadertxt'+ heatmap.getName()).text("Semantic loading...")
+            ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready' + heatmap.getName()).style('visibility', 'hidden')
+        }
         parentui.updateSelected();
         ui.btnSelect.on('click', function () {
             selected = (selected == true) ? false : true;
@@ -204,7 +205,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 var newhmui = new HeatmapUI(newhm, parentui, config, options);
 
                 //Get parentui to draw this new combined hm
-                parentui.uploadComplete(newhmui);
+                parentui.uploadComplete(heatmap_name, newhm.getWords(), newhmui);
             }
 
             d3.selectAll('#dragoverUI').attr('class', 'hidden');
@@ -289,11 +290,13 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var fs = config.fs;
         var flipy = config.flipy;
         var axisOrder = state.axisOrder;
-        //        console.log("Draw Heatmap " + axisOrder)
         var maxLength = (config.maxLength == -1) ? state.maxLength : config.maxLength;
         var charSet = options.charSet[config.charSet];
         var maxFreq = 0;
+
         var axisWord = config.axisWord;
+        var isSemantic = heatmap.isSemantic
+        var SemanticTab = heatmap.getSemantic()
 
         var svgw = charSet.length * cw + hw;
         var svgh = maxLength * ch + hh + kh + sbh + hish;
@@ -301,7 +304,10 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var div = ui.cont.append('div').attr('class', 'svgOverFlow');
         ui.svg = div.append('svg').attr('class', 'svgHeatmap').attr('width', svgw).attr('height', svgh).attr('display', 'block')//.style('border', '1px solid black')
 
-        charSet = applyAxisOrder(axisOrder, charSet, axisWord);
+        charSet = applyAxisOrder(axisOrder, charSet, axisWord, isSemantic);
+        if (isSemantic == true) {
+            cw *= 3.36
+        }
         for (x = 0; x < charSet.length; x++) {
             var c = charSet[x]
 
@@ -321,20 +327,22 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 //Cells
                 ui.svg.append('g').append('rect').attr('class', 'cell').attr('id', '_' + c + '_' + pos).attr('x', (x * cw) + hw).attr('y', (y * ch) + hh).attr('width', cw).attr('height', ch).style('stroke', 'grey').style('fill', 'none').attr('width', cw).attr('height', ch).style('stroke-width', '0')
                     .on('mouseover', function (d) {
-                        if (d.freq == undefined) {
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, false);
-                        } else {
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, false);
-                        }
+                        parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, false);
                     })
                     .on('mouseout', function (d) {
                         parentui.highlightCell({ 'c': d.c, 'pos': d.pos }, true);
                     });
                 try {
-                    var cfreq = state.position[pos].chars[c];
+                    var cfreq = 0
+                    if (isSemantic == true) {
+                        cfreq = SemanticTab[c][pos]
+                    }
+                    else {
+                        cfreq = state.position[pos].chars[c];
+                    }
                     maxFreq = (maxFreq < cfreq) ? cfreq : maxFreq;
                     datum.push({ 'c': c, 'pos': pos, 'freq': cfreq });
-                } catch (err) {
+            } catch (err) {
                     datum.push({ 'c': c, 'pos': pos, 'freq': undefined });
                 }
             }
@@ -413,9 +421,12 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         return ui.svg;
     }
 
-    var applyAxisOrder = function (axisOrder, charSet, axisWord) {
+    var applyAxisOrder = function (axisOrder, charSet, axisWord, isSemantic) {
         var state = heatmap.getState();
         var returnme = "";
+        if (isSemantic == true) {
+            return ["ADJ","ADV","INTJ","NOUN","PROPN","VERB","ADP","AUX","CONJ","CCONJ","DET","NUM","PART","PRON","SCONJ","PUNCT","SYM", "X"]
+        }
         if (axisOrder == "alphabetical")
             returnme = options.charSet[config.charSet];
         else if (axisOrder == "frequency") {
@@ -618,6 +629,17 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         return heatmap.getState();
     }
 
+    var setSemantic = function (data, lang) {
+        heatmap.setSemantic(data, lang);
+    }
+
+    var getSemantic = function () {
+        return heatmap.getSemantic();
+    }
+
+    var getIsSemantic = function() {
+        return heatmap.isSemantic;
+    }
     var getName = function () {
         return heatmap.getName()
     }
@@ -769,6 +791,10 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         getSelectedWords: getSelectedWords,
 
         getName: getName,
+
+        getIsSemantic : getIsSemantic,
+		getSemantic : getSemantic,
+		setSemantic : setSemantic,
 
         getWords: getWords,
         reOrderAxis: reOrderAxis,

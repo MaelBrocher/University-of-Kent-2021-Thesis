@@ -472,7 +472,7 @@ var ParacoordUI = function (config, options) {
     }
 
     var getSemanticsFromUpload = function (lang) {
-        function runPyScriptSemantic2(input, lang, callback) {
+        function runPyScriptSemantic2(input, lang, heat) {
             var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
             $.ajax({
                 crossDomain: true,
@@ -480,13 +480,11 @@ var ParacoordUI = function (config, options) {
                 url: "http://127.0.0.1:5000/semantic2",
                 async: true,
                 data: { mydata: dataS },
-                success: callback
+                success: function printAndCallback(result) {
+                    heat.setSemantic(result, lang)
+                }
             });
-
         }
-        function printAndCallback(result) {
-            console.log(result)
-        };
         var selected = getSelected();
         var names = "Semantic not ready for :"
         for (var i = 0; i < selected.length; i++) {
@@ -495,13 +493,22 @@ var ParacoordUI = function (config, options) {
                 names += "\n" + name
             }
             else 
-                runPyScriptSemantic2(name, lang, printAndCallback);
+                runPyScriptSemantic2(name, lang, selected[i]);
         }
-        if (names != "Semantic not ready for ") {
+        if (names != "Semantic not ready for :") {
             var x = document.getElementById("toast")
             x.className = "show";
             x.innerText = names;
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 5000);
+        }
+        else {
+            for (var i = 0; i < selected.length; i++) {
+                var newhm = new Heatmap(lang + "semantic of " + selected[i].getName());
+                newhm.isSemantic = true
+                newhm.buildHeatmap(selected[i].getWords());
+                var hmui = new HeatmapUI(newhm, self, config, options);
+                uploadComplete(lang + " semantic of " + selected[i].getName(), selected[i].getWords(), hmui);
+            }
         }
     }
 
@@ -704,13 +711,14 @@ var ParacoordUI = function (config, options) {
     }
 
 
-    var uploadComplete = function (hmui) {
+    var uploadComplete = function (name, words, hmui) {
         // if (config.debug) out('uploadComplete')
 
         d3.select('.loaderbg').style('visibility', 'hidden');
 
         if (hmui != undefined) {
             heatmaps.push(hmui);
+            uploadWords(name, words, hmui)
             hmui.init(ui.heatmapContainer);
         }
     }
@@ -727,13 +735,14 @@ var ParacoordUI = function (config, options) {
                 url: "http://127.0.0.1:5000/uploadHeatmap",
                 async: true,
                 data: { mydata: dataS },
-            }).always(function (data) {
+            }).always(function () {
                 document.getElementById('loadertxt'+name).innerText = "Semantic is ready"
                 document.getElementById('loader'+name).style.visibility = 'hidden';
                 document.getElementById('ready'+name).style.visibility = 'visible';
             });
         }
-        runPyScriptUploadHeatmap(Object.keys(words), name, hmui);
+        if (hmui.getIsSemantic() == false) 
+            runPyScriptUploadHeatmap(Object.keys(words), name, hmui);
     }
 
     var readFiles = function (files, delim, callback) {
@@ -788,10 +797,10 @@ var ParacoordUI = function (config, options) {
 
                 //Add new information to internal objects
                 var hm = new Heatmap(files[n].name);
+                hm.isSemantic = false,
                 hm.buildHeatmap(rawData, false);
                 var hmui = new HeatmapUI(hm, self, config, options);
-                uploadComplete(hmui);
-                uploadWords(files[n].name, hm.getWords(), hmui)
+                uploadComplete(files[n].name, hm.getWords(), hmui);
             } else {
                 out('function:readFiles(files, delim, callback) - ERROR Unknown delim');
             }
@@ -1086,15 +1095,10 @@ var ParacoordUI = function (config, options) {
     }
     var copyHM = function (hm) {
 
-        // TODO
-        out('name ' + hm.name);
-        var newhm = new Heatmap(hm.getState().name);
-
+        var newhm = new Heatmap(hm.getState().name + " Copy");
         newhm.buildHeatmap(hm.getWords());
         var hmui = new HeatmapUI(newhm, self, config, options);
-        uploadComplete(hmui);
-
-
+        uploadComplete(hm.name, hm.getWords(), hmui);
     }
 
     return {

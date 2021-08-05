@@ -16,6 +16,11 @@ var Heatmap = function (filename, state, parent) {
 			position: {},
 			parent: undefined,
 			child: undefined,
+			lang : "fr",
+			isSemantic : false,
+			semanticFr : {},
+			semanticDe : {},
+			semanticEn : {},
 		};
 	};
 
@@ -355,6 +360,31 @@ var Heatmap = function (filename, state, parent) {
 	};
 
 	/**
+	 * @return French Semantic heatmap
+	 */
+	 var getSemantic = function () {
+		if (state.lang == 'fr')
+			return state.semanticFr;
+		if (state.lang == 'de')
+			return state.semanticDe;
+		if (state.lang == 'en')
+			return state.semanticEn;
+	};
+
+	/**
+	 * @set French Semantic heatmap
+	 */
+	 var setSemantic = function (data, lang) {
+		state.lang = lang
+		if (lang == 'fr')
+			state.semanticFr = data;
+		if (lang == 'de')
+			state.semanticDe = data;
+		if (lang == 'en')
+			state.semanticEn = data;
+	};
+
+	/**
 	 * @return this states parent heatmap
 	 */
 	var getParent = function () {
@@ -478,6 +508,11 @@ var Heatmap = function (filename, state, parent) {
 		getWordsIncluding: getWordsIncluding,
 		getRemovedWords: getRemovedWords,
 		getName: getName,
+
+		getSemantic : getSemantic,
+
+		setSemantic : setSemantic,
+
 
 		getCharSetOrderByAlphabet: getCharSetOrderByAlphabet,
 		getCharSetOrderByFrequency: getCharSetOrderByFrequency,

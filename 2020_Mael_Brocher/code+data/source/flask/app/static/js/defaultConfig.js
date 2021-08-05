@@ -19,6 +19,7 @@ var defaultConfig = {
     "alpha"             : 2.5,
     "axisOrder": "alphabetical",
     "axisWord" : "",
+    "semantic" : false,
 };
 var defaultOptions = {
     "tableSize"          : {
