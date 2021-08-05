@@ -3,7 +3,6 @@ from app import app
 from flask import Flask, render_template, redirect, url_for,request
 from flask import make_response
 import spacy
-from spacy_langdetect import LanguageDetector
 from wordninja import wordninjaEn
 from wordninja import wordninjaFr
 from wordninja import wordninjaDe
