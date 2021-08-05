@@ -503,7 +503,7 @@ var ParacoordUI = function (config, options) {
         }
         else {
             for (var i = 0; i < selected.length; i++) {
-                var newhm = new Heatmap(lang + "semantic of " + selected[i].getName());
+                var newhm = new Heatmap(lang + " semantic of " + selected[i].getName());
                 newhm.isSemantic = true
                 newhm.buildHeatmap(selected[i].getWords());
                 var hmui = new HeatmapUI(newhm, self, config, options);
