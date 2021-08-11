@@ -39,6 +39,7 @@ class MyThread (threading.Thread):
                         self.tab[token.pos_][i] += 1
                     except IndexError:
                         pass
+        self.tab["UKN"] = self.tab.pop("X")
         self.running = False
 
     def getRunning(self):
@@ -103,23 +104,24 @@ def uploadHeatmap():
         wordlist = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
         hname = wordlist[0]
         wordlist.pop(0)
-        tFr = MyThread(tabGenerator(), wordlist, 'fr')
-        tDe = MyThread(tabGenerator(), wordlist, 'de')
-        tEn = MyThread(tabGenerator(), wordlist, 'en')
-    
-        tFr.start()
-        tDe.start()
-        tEn.start()
-    
-        while tFr.getRunning() == True or tDe.getRunning() == True or tEn.getRunning() == True:
-            sleep(0.01)
-        
-        heatmap = Heatmap(hname)
-        heatmap.setDataFr(tFr.getResult())
-        heatmap.setDataDe(tDe.getResult())
-        heatmap.setDataEn(tEn.getResult())
-    
-        heatmaps.addHeatmap(heatmap)
+        if heatmaps.getHeatmapFromName(hname) == None :
+            tFr = MyThread(tabGenerator(), wordlist, 'fr')
+            tDe = MyThread(tabGenerator(), wordlist, 'de')
+            tEn = MyThread(tabGenerator(), wordlist, 'en')
+
+            tFr.start()
+            tDe.start()
+            tEn.start()
+
+            while tFr.getRunning() == True or tDe.getRunning() == True or tEn.getRunning() == True:
+                sleep(0.01)
+
+            heatmap = Heatmap(hname)
+            heatmap.setDataFr(tFr.getResult())
+            heatmap.setDataDe(tDe.getResult())
+            heatmap.setDataEn(tEn.getResult())
+
+            heatmaps.addHeatmap(heatmap)
     
         resp = make_response(hname)
         resp.headers['Content-Type'] = "application/json"

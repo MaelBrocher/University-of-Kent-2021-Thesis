@@ -309,6 +309,7 @@ var ParacoordUI = function (config, options) {
         exp.inputWordsAxis.on('change', function () {
             updateHeatmapCore();
         });
+
         exp.btnWordsAxis.on('click', function () {
             updateHeatmapCore();
         });
@@ -471,47 +472,61 @@ var ParacoordUI = function (config, options) {
         return selected;
     }
 
-    var getSemanticsFromUpload = function (lang) {
-        function runPyScriptSemantic2(input, lang, heat) {
-            var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
-            $.ajax({
-                crossDomain: true,
-                type: "POST",
-                url: "http://127.0.0.1:5000/semantic2",
-                async: true,
-                data: { mydata: dataS },
-                success: function printAndCallback(result) {
-                    heat.setSemantic(result, lang)
-                }
-            });
+    var runPyScriptSemantic2 = function (input, lang, dict) {
+        var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
+        $.ajax({
+            crossDomain: true,
+            type: "POST",
+            url: "http://127.0.0.1:5000/semantic2",
+            async: false,
+            data: { mydata: dataS },
+            success: function printAndCallback(result) {
+                dict[input.hashCode()] = result
+                return result;
+            }
+        });
+    }
+    String.prototype.hashCode = function() {
+        var hash = 0, i, chr;
+        if (this.length === 0) return hash;
+        for (i = 0; i < this.length; i++) {
+          chr   = this.charCodeAt(i);
+          hash  = ((hash << 5) - hash) + chr;
+          hash |= 0; // Convert to 32bit integer
         }
+        return hash;
+      };
+    var getSemanticsFromUpload = function (lang) {
         var selected = getSelected();
         var names = "Semantic not ready for :"
+        var dict = {}
         for (var i = 0; i < selected.length; i++) {
             var name = selected[i].getName();
-            if (document.getElementById('loadertxt'+name).innerText == "Semantic loading...") {
-                names += "\n" + name
+            if (selected[i].getIsSemantic() == false) {
+                if (document.getElementById('loadertxt'+name).innerText == "Semantic loading...") {
+                    names += "\n" + name
+                }
+                else
+                    runPyScriptSemantic2(name, lang, dict);
             }
-            else 
-                runPyScriptSemantic2(name, lang, selected[i])
         }
         if (names != "Semantic not ready for :") {
             var x = document.getElementById("toast")
             x.className = "show";
             x.innerText = names;
             setTimeout(function(){ x.className = x.className.replace("show", ""); }, 5000);
-        }
-        else {
+        } else {
             var selected = getSelected();
             for (var i = 0; i < selected.length; i++) {
-                console.log(selected[i].getSemantic())
-                var newhm = new Heatmap(lang + " semantic of " + selected[i].getName());
-                newhm.isSemantic = true
-                newhm.buildHeatmap(selected[i].getWords());
-                newhm.setSemantic(selected[i].getSemantic(), lang)
-                console.log(newhm.getSemantic())
-                var hmui = new HeatmapUI(newhm, self, config, options);
-                uploadComplete(lang + " semantic of " + selected[i].getName(), selected[i].getWords(), hmui);
+                if (selected[i].getIsSemantic() == false) {
+
+                    var newhm = new Heatmap(lang + " semantic of " + selected[i].getName(), selected[i].getIsSemantic());
+                    newhm.isSemantic = true
+                    newhm.buildHeatmap(selected[i].getWords());
+                    newhm.setSemantic(dict[selected[i].getName().hashCode()], lang)
+                    var hmui = new HeatmapUI(newhm, self, config, options);
+                    uploadComplete(lang + " semantic of " + selected[i].getName(), selected[i].getWords(), hmui);
+                }
             }
         }
     }
@@ -533,12 +548,10 @@ var ParacoordUI = function (config, options) {
 
         }
         function printAndCallback(result) {
-            console.log(result)
         };
         var selected = getSelected();
         for (var i = 0; i < selected.length; i++) {
             var datatosend = selected[i].getWords();
-            console.log(Object.keys(datatosend))
             runPyScriptSemantic(Object.keys(datatosend), lang, printAndCallback);
         }
     }
@@ -728,7 +741,7 @@ var ParacoordUI = function (config, options) {
     }
 
     var uploadWords = function (name, words, hmui) {
-        function runPyScriptUploadHeatmap(input, name) {
+        function runPyScriptUploadHeatmap(input, name, hmui) {
             var dataS = name + "2431ecfe25e234d51b22ff47701d0fae";
             for (i = 0; i < input.length; i++) {
                 dataS += input[i] + "2431ecfe25e234d51b22ff47701d0fae"
@@ -783,7 +796,7 @@ var ParacoordUI = function (config, options) {
             }
 
             if (cont == true) {
-                var hm = new Heatmap(files[n].name);
+                var hm = new Heatmap(files[n].name, false);
 
                 //Minimise list
                 //transform result{} to key-value pair{}
@@ -800,7 +813,7 @@ var ParacoordUI = function (config, options) {
                 });
 
                 //Add new information to internal objects
-                var hm = new Heatmap(files[n].name);
+                var hm = new Heatmap(files[n].name, false);
                 hm.isSemantic = false,
                 hm.buildHeatmap(rawData, false);
                 var hmui = new HeatmapUI(hm, self, config, options);
@@ -911,7 +924,7 @@ var ParacoordUI = function (config, options) {
                 freq = "0";
                 try {
                     if (d.semantic == true) {
-                        freq = d.value
+                        freq = heatmaps[i].getSemantic()[d.c][d.pos-1]
                     }
                     else
                         freq = heatmaps[i].getState().position[d.pos].chars[d.c];
@@ -926,12 +939,10 @@ var ParacoordUI = function (config, options) {
 
     var highlightPolyline = function (d, onExit, onClick) {
         for (var i = 0; i < heatmaps.length; i++) {
-
             var svg = heatmaps[i].getUI().svg;
             var tip = svg.select('#hoverWord');
             var strengthBar = svg.select('#strengthBar');
             var polyline = d3.select(svg.node().getElementById('_' + d.word));
-
             if (polyline.node() != null) {
 
                 var isSelected = polyline.node().className.baseVal.includes('polylineSelected');
@@ -1101,12 +1112,22 @@ var ParacoordUI = function (config, options) {
 
         return r;
     }
-    var copyHM = function (hm) {
+    var copyHM = function (hm, name) {
 
-        var newhm = new Heatmap(hm.getState().name + " Copy");
+        if (name == undefined)
+            name = hm.getState().name + " Copy"
+        var newhm = new Heatmap(name, hm.isSemantic);
+        newhm.isSemantic = hm.isSemantic
         newhm.buildHeatmap(hm.getWords());
         var hmui = new HeatmapUI(newhm, self, config, options);
         uploadComplete(hm.name, hm.getWords(), hmui);
+        return hmui;
+    }
+
+    var sleep = function (ms) {
+        var start = new Date().getTime(), expire = start + ms;
+        while (new Date().getTime() < expire) { }
+        return;
     }
 
     return {

@@ -196,7 +196,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 }
 
                 //Create new heatmap
-                var newhm = new Heatmap(heatmap_name, undefined, undefined);
+                var newhm = new Heatmap(heatmap_name, heatmap.isSemantic, undefined, undefined);
                 newhm.buildHeatmap(words1, false, options.charSet[config.charSet]);
                 if (e.srcElement.id == "btnNormalMerge")
                     newhm.buildHeatmap(words2, true, options.charSet[config.charSet]);
@@ -328,13 +328,13 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 ui.svg.append('g').append('rect').attr('class', 'cell').attr('id', '_' + c + '_' + pos).attr('x', (x * cw) + hw).attr('y', (y * ch) + hh).attr('width', cw).attr('height', ch).style('stroke', 'grey').style('fill', 'none').attr('width', cw).attr('height', ch).style('stroke-width', '0')
                     .on('mouseover', function (d) {
                         if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab[d.c][d.pos-1]}, false);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab}, false);
                         else
                             parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, false);
                     })
                     .on('mouseout', function (d) {
                         if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab[d.c][d.pos-1]}, true);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab}, true);
                         else
                             parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, true);
                     });
@@ -358,11 +358,21 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var data = [];
         var maxPerc = 0;
         for (var i = 0; i < charSet.length; i++) {
-            var c = charSet[i];
-            var cfreq = (state.charSet[c] == undefined) ? 0 : state.charSet[c];
-            var perc = cfreq / state.charCount * 100;
-            maxPerc = (maxPerc < perc) ? perc : maxPerc;
-            data.push({ 'value': perc, 'name': c });
+            if (isSemantic == true)
+            {
+                var c = charSet[i];
+                var cfreq = (state.semanticSum[c] == undefined) ? 0 : state.semanticSum[c];
+                var perc = cfreq / state.semanticCharcount * 100;
+                maxPerc = (maxPerc < perc) ? perc : maxPerc;
+                data.push({ 'value': perc, 'name': c });    
+            }
+            else {
+                var c = charSet[i];
+                var cfreq = (state.charSet[c] == undefined) ? 0 : state.charSet[c];
+                var perc = cfreq / state.charCount * 100;
+                maxPerc = (maxPerc < perc) ? perc : maxPerc;
+                data.push({ 'value': perc, 'name': c });
+            }
         }
         var y = d3.scale.linear().range([hish, 0]).domain([0, maxPerc]);
         var barWidth = cw;
@@ -431,7 +441,24 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var state = heatmap.getState();
         var returnme = "";
         if (isSemantic == true) {
-            return ["ADJ","ADV","INTJ","NOUN","PROPN","VERB","ADP","AUX","CONJ","CCONJ","DET","NUM","PART","PRON","SCONJ","PUNCT","SYM", "X"]
+            charSet = ["ADJ","ADV","INTJ","NOUN","PROPN","VERB","ADP","AUX","CONJ","CCONJ","DET","NUM","PART","PRON","SCONJ","PUNCT","SYM", "UKN"]
+            if (axisOrder == "alphabetical") {
+                return charSet
+            }
+            else if (axisOrder == "frequency") {
+                var data = [];
+                for (var i = 0; i < charSet.length; i++) {
+                    var c = charSet[i];
+                    var cfreq = (state.semanticSum[c] == undefined) ? 0 : state.semanticSum[c];
+                    data.push({ value: cfreq, name: c });
+                }
+                data.sort(function (a, b) { return b.value - a.value; });
+                returnme = []
+                for (var i = 0 ; i < charSet.length; i++) {
+                    returnme.push(data[i].name)
+                }
+                return returnme
+            }
         }
         if (axisOrder == "alphabetical")
             returnme = options.charSet[config.charSet];
@@ -506,7 +533,6 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         chart.attr('height', '50px');
         var data = [];
         var maxPerc = 0;
-        var charSet = state.charSet;
         var userCharSet = options.charSet[config.charSet];
 
         var hh = 12;
@@ -646,6 +672,10 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
     var getIsSemantic = function() {
         return heatmap.isSemantic;
     }
+
+    var setIsSemantic = function(val) {
+        heatmap.isSemantic = val;
+    }
     var getName = function () {
         return heatmap.getName()
     }
@@ -655,7 +685,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
     }
 
     var reOrderAxis = function (n) {
-        heatmap = heatmap.reOrderAxis(n, options.charSet[config.charSet]);
+        heatmap = heatmap.reOrderAxis(n , heatmap.isSemantic);
         heatmap.getState().axisOrder = n
         drawHeatmap();
         updateButtons();
@@ -798,6 +828,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
 
         getName: getName,
 
+        setIsSemantic : setIsSemantic,
         getIsSemantic : getIsSemantic,
 		getSemantic : getSemantic,
 		setSemantic : setSemantic,

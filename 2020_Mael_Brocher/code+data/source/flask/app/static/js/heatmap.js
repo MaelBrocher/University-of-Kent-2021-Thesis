@@ -1,7 +1,7 @@
 /**
  *
  */
-var Heatmap = function (filename, state, parent) {
+var Heatmap = function (filename, semantic,state, parent) {
 	var defaultState = function () {
 		return {
 			name: filename,
@@ -17,7 +17,9 @@ var Heatmap = function (filename, state, parent) {
 			parent: undefined,
 			child: undefined,
 			lang : "fr",
-			isSemantic : false,
+			isSemantic : semantic,
+			semanticSum : {},
+			semanticCharcount : 0,
 			semanticFr : {},
 			semanticDe : {},
 			semanticEn : {},
@@ -53,7 +55,7 @@ var Heatmap = function (filename, state, parent) {
 			}
 		}
 
-		//Build this
+		//Build this	
 		for (i = 1; i <= state.maxLength; i++) {
 			if (state.position[i] == undefined) {
 				state.position[i] = {
@@ -91,17 +93,19 @@ var Heatmap = function (filename, state, parent) {
 				}
 			}
 		}
-
 		return this;
 	};
 
 	/**
 	 *
 	 */
-	 var reOrderAxis = function (n, givenCharSet) {
-		var child = new Heatmap(state.name, null, this);
-		var words = getWords(n);
-
+	 var reOrderAxis = function (n, bool) {
+		state.isSemantic = bool
+		var child = new Heatmap(state.name, state.isSemantic, null, this);
+		var words = getWords();
+		child.isSemantic = state.isSemantic
+		child.lang = state.lang
+		child.setSemantic(getSemantic(), state.lang)
 		child.axisOrder = n;
 		child.buildHeatmap(words);
 
@@ -120,7 +124,7 @@ var Heatmap = function (filename, state, parent) {
 	 *
 	 */
 	var filterPin = function (n) {
-		var child = new Heatmap(state.name, null, this);
+		var child = new Heatmap(state.name,state.isSemantic, null, this);
 
 		//user defined pin length or default 4
 		var n = n == undefined ? 4 : n;
@@ -142,7 +146,7 @@ var Heatmap = function (filename, state, parent) {
 	 *
 	 */
 	var filterDate = function (pttn) {
-		var child = new Heatmap(state.name, null, this);
+		var child = new Heatmap(state.name,state.isSemantic, null, this);
 
 		var words = getWords();
 
@@ -166,7 +170,7 @@ var Heatmap = function (filename, state, parent) {
 	 *
 	 */
 	var filterThoseIncluding = function (arr) {
-		var child = new Heatmap(state.name, null, this);
+		var child = new Heatmap(state.name,state.isSemantic, null, this);
 
 		arr.forEach(function (w) {
 			child.buildHeatmap(getWordsIncluding(w));
@@ -181,7 +185,7 @@ var Heatmap = function (filename, state, parent) {
 	 * @return Return child heatmap
 	 */
 	var removeWords = function (wArr, matchWord) {
-		var child = new Heatmap(state.name, null, this);
+		var child = new Heatmap(state.name,state.isSemantic, null, this);
 		child.buildHeatmap(getWords());
 		state.child = child;
 
@@ -377,11 +381,19 @@ var Heatmap = function (filename, state, parent) {
 	 var setSemantic = function (data, lang) {
 		state.lang = lang
 		if (lang == 'fr')
-			state.semanticFr = data;
-		if (lang == 'de')
+		{
+		state.semanticFr = data;
+		}
+		if (lang == 'de') {
 			state.semanticDe = data;
-		if (lang == 'en')
+		}
+		if (lang == 'en') {
 			state.semanticEn = data;
+		}
+		for (var key in data) {
+			state.semanticSum[key] = data[key].reduce((a,b)=> a+b, 0)
+			state.semanticCharcount += state.semanticSum[key]
+		}
 	};
 
 	/**
