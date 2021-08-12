@@ -20,7 +20,6 @@ var Heatmap = function (filename, semantic,state, parent) {
 			isSemantic : semantic,
 			semanticCharset : {"ADJ": 0,"ADV": 0,"INTJ": 0,"NOUN": 0,"PROPN": 0,"VERB": 0,"ADP": 0,"AUX": 0,"CONJ": 0,"CCONJ": 0,"DET": 0,"NUM": 0,"PART": 0,"PRON": 0,"SCONJ": 0,"PUNCT": 0,"SYM": 0, "UKN": 0},
 			semanticPosition : {},
-			semanticSum : {},
 			semanticCharcount : 0,
 			semanticFr : {},
 			semanticDe : {},
@@ -106,9 +105,9 @@ var Heatmap = function (filename, semantic,state, parent) {
 		var words = getWords();
 		child.isSemantic = state.isSemantic
 		child.lang = state.lang
+		child.buildHeatmap(words);
 		child.setSemantic(getSemantic(), state.lang)
 		child.axisOrder = n;
-		child.buildHeatmap(words);
 
 		state.child = child;
 		return child;
@@ -399,7 +398,7 @@ var Heatmap = function (filename, semantic,state, parent) {
 			state.semanticCharcount += data[pw][0].length * data[pw][1];
 
 			for (i = 0; i < data[pw][0].length; ++i) {
-				state.semanticCharset[data[pw][i]] == undefined
+				state.semanticCharset[data[pw][0][i]] == undefined
 					? (state.semanticCharset[data[pw][0][i]] = data[pw][1])
 					: (state.semanticCharset[data[pw][0][i]] += data[pw][1]);
 			}

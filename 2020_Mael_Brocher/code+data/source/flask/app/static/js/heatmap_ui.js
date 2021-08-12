@@ -41,6 +41,9 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
             ui.loadertxt = div.append('div').attr('class', 'loadertext').attr('id', 'loadertxt'+ heatmap.getName()).text("Semantic loading...")
             ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready' + heatmap.getName()).style('visibility', 'hidden')
         }
+        else {
+            ui.PosDoc = div.append('a').attr('class', 'btnI').attr('target', '_blank').attr('href', 'https://universaldependencies.org/docs/u/pos/').text('i')
+        }
         parentui.updateSelected();
         ui.btnSelect.on('click', function () {
             selected = (selected == true) ? false : true;
@@ -361,7 +364,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
             if (isSemantic == true)
             {
                 var c = charSet[i];
-                var cfreq = (state.semanticSum[c] == undefined) ? 0 : state.semanticSum[c];
+                var cfreq = (state.semanticCharset[c] == undefined) ? 0 : state.semanticCharset[c];
                 var perc = cfreq / state.semanticCharcount * 100;
                 maxPerc = (maxPerc < perc) ? perc : maxPerc;
                 data.push({ 'value': perc, 'name': c });    
@@ -449,7 +452,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 var data = [];
                 for (var i = 0; i < charSet.length; i++) {
                     var c = charSet[i];
-                    var cfreq = (state.semanticSum[c] == undefined) ? 0 : state.semanticSum[c];
+                    var cfreq = (state.semanticCharset[c] == undefined) ? 0 : state.semanticCharset[c];
                     data.push({ value: cfreq, name: c });
                 }
                 data.sort(function (a, b) { return b.value - a.value; });
