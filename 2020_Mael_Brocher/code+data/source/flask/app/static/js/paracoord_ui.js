@@ -472,12 +472,12 @@ var ParacoordUI = function (config, options) {
         return selected;
     }
 
-    var runPyScriptSemantic2 = function (input, lang, dict) {
+    var runPyScriptSemantic = function (input, lang, dict) {
         var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
         $.ajax({
             crossDomain: true,
             type: "POST",
-            url: "http://127.0.0.1:5000/semantic2",
+            url: "http://127.0.0.1:5000/semantic",
             async: false,
             data: { mydata: dataS },
             success: function printAndCallback(result) {
@@ -507,7 +507,7 @@ var ParacoordUI = function (config, options) {
                     names += "\n" + name
                 }
                 else
-                    runPyScriptSemantic2(name, lang, dict);
+                    runPyScriptSemantic(name, lang, dict);
             }
         }
         if (names != "Semantic not ready for :") {
@@ -531,30 +531,6 @@ var ParacoordUI = function (config, options) {
         }
     }
 
-    var CreateSemantics = function (lang) {
-        function runPyScriptSemantic(input, lang, callback) {
-            var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae";
-            for (i = 0; i < input.length; i++) {
-                dataS += input[i] + "2431ecfe25e234d51b22ff47701d0fae"
-            }
-            $.ajax({
-                crossDomain: true,
-                type: "POST",
-                url: "http://127.0.0.1:5000/semantic",
-                async: true,
-                data: { mydata: dataS },
-                success: callback
-            });
-
-        }
-        function printAndCallback(result) {
-        };
-        var selected = getSelected();
-        for (var i = 0; i < selected.length; i++) {
-            var datatosend = selected[i].getWords();
-            runPyScriptSemantic(Object.keys(datatosend), lang, printAndCallback);
-        }
-    }
 
     var updateHeatmapColour = function () {
         out('updateHeatmapColour')
@@ -924,7 +900,7 @@ var ParacoordUI = function (config, options) {
                 freq = "0";
                 try {
                     if (d.semantic == true) {
-                        freq = heatmaps[i].getSemantic()[d.c][d.pos-1]
+                        freq = heatmaps[i].getState().semanticPosition[d.pos].chars[d.c]
                     }
                     else
                         freq = heatmaps[i].getState().position[d.pos].chars[d.c];

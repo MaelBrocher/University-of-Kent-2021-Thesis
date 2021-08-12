@@ -306,7 +306,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
 
         charSet = applyAxisOrder(axisOrder, charSet, axisWord, isSemantic);
         if (isSemantic == true) {
-            cw *= 3.36
+            cw *= 3.4
         }
         for (x = 0; x < charSet.length; x++) {
             var c = charSet[x]
@@ -328,20 +328,20 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 ui.svg.append('g').append('rect').attr('class', 'cell').attr('id', '_' + c + '_' + pos).attr('x', (x * cw) + hw).attr('y', (y * ch) + hh).attr('width', cw).attr('height', ch).style('stroke', 'grey').style('fill', 'none').attr('width', cw).attr('height', ch).style('stroke-width', '0')
                     .on('mouseover', function (d) {
                         if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab}, false);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic}, false);
                         else
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, false);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic}, false);
                     })
                     .on('mouseout', function (d) {
                         if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  SemanticTab}, true);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic }, true);
                         else
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic, 'value' :  0}, true);
+                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic }, true);
                     });
                 try {
                     var cfreq = 0
                     if (isSemantic == true) {
-                        cfreq = SemanticTab[c][pos-1]
+                        cfreq = state.semanticPosition[pos].chars[c]
                     }
                     else {
                         cfreq = state.position[pos].chars[c];

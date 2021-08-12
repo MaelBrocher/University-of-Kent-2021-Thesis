@@ -13,11 +13,13 @@ import langid
 frenchSpacy = spacy.load("fr_core_news_sm")
 germanSpacy = spacy.load("de_core_news_sm")
 englishSpacy = spacy.load("en_core_web_sm")
+n = open("../../data/NAMES.txt")
+names = n.read().split('\n')
 
 class MyThread (threading.Thread):
-    def __init__(self, tab, wordlist, lang):
+    def __init__(self, wordlist, lang):
         threading.Thread.__init__(self)
-        self.tab = tab
+        self.words = {}
         self.lang = lang
         self.running = True
         self.wordlist = wordlist
@@ -29,23 +31,37 @@ class MyThread (threading.Thread):
             nlp, wordninja = englishSpacy, wordninjaEn
         elif (self.lang  == 'fr') :
             nlp, wordninja = frenchSpacy, wordninjaFr
+        i = 0
         for passw in self.wordlist:
-            res = " ".join(wordninja.split(passw))
-            doc = nlp(res)
-            detect = langid.classify(res)
-            if detect[0] == self.lang:
-                for i, token in enumerate(doc):
-                    try:
-                        self.tab[token.pos_][i] += 1
-                    except IndexError:
-                        pass
-        self.tab["UKN"] = self.tab.pop("X")
+            if passw in names :
+                pass
+            res = wordninja.split(passw)
+            if (len(res) <= len(passw)-2) :
+                doc = nlp(" ".join(res))
+                detect = langid.classify(passw)
+                if detect[0] == self.lang:
+                    self.words[i] = [token.pos_ if token.pos_ != 'X' else 'UKN' for token in doc]
+                    i += 1
+        tmp = {}
+        addme = True
+        i = 0
+        for key in self.words:
+            for a in tmp:
+                if tmp[a][0] == self.words[key]:
+                    addme = False
+                    tmp[a][1] += 1
+                    break
+            if addme == True:
+                tmp[i] = [self.words[key], 1]
+                i += 1
+            addme = True
+        self.words = tmp
         self.running = False
 
     def getRunning(self):
         return self.running
     def getResult(self):
-        return self.tab
+        return self.words
 
 class Heatmaps ():
     def __init__(self):
@@ -105,9 +121,9 @@ def uploadHeatmap():
         hname = wordlist[0]
         wordlist.pop(0)
         if heatmaps.getHeatmapFromName(hname) == None :
-            tFr = MyThread(tabGenerator(), wordlist, 'fr')
-            tDe = MyThread(tabGenerator(), wordlist, 'de')
-            tEn = MyThread(tabGenerator(), wordlist, 'en')
+            tFr = MyThread(wordlist, 'fr')
+            tDe = MyThread(wordlist, 'de')
+            tEn = MyThread(wordlist, 'en')
 
             tFr.start()
             tDe.start()
@@ -130,8 +146,8 @@ def uploadHeatmap():
         resp.headers.add('Access-Control-Allow-Methods', 'POST')
         return resp
 
-@app.route('/semantic2', methods=['POST'])
-def semanticTest():
+@app.route('/semantic', methods=['POST'])
+def semantic():
     if request.method == 'POST':
         datafromjs = request.form['mydata']
         hnames = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
@@ -157,37 +173,6 @@ def semanticTest():
         else :
             res = "Data not ready yet"
         resp = make_response(res)
-        resp.headers['Content-Type'] = "application/json"
-        resp.headers.add('Access-Control-Allow-Origin', '*')
-        resp.headers.add('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-        resp.headers.add('Access-Control-Allow-Methods', 'POST')
-        return resp
-
-@app.route('/semantic', methods=['GET', 'POST'])
-def classify():
-   if request.method == 'POST':
-        datafromjs = request.form['mydata']
-        wordlist = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
-        lang = wordlist[0]
-        wordlist.pop(0)
-        if (lang == 'de'):
-            nlp, wordninja = germanSpacy, wordninjaDe
-        elif (lang == 'en'):
-            nlp, wordninja = englishSpacy, wordninjaEn
-        elif (lang == 'fr') :
-            nlp, wordninja = frenchSpacy, wordninjaFr
-        tab = tabGenerator()
-        for passw in wordlist:
-            res = " ".join(wordninja.split(passw))
-            doc = nlp(res)
-            detect = langid.classify(res)
-            if detect[0] == lang:
-                for i, token in enumerate(doc):
-                    try:
-                        tab[token.pos_][i] += 1
-                    except IndexError:
-                        pass
-        resp = make_response(tab)
         resp.headers['Content-Type'] = "application/json"
         resp.headers.add('Access-Control-Allow-Origin', '*')
         resp.headers.add('Access-Control-Allow-Headers', 'Authorization, Content-Type')

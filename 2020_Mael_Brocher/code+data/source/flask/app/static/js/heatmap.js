@@ -18,6 +18,8 @@ var Heatmap = function (filename, semantic,state, parent) {
 			child: undefined,
 			lang : "fr",
 			isSemantic : semantic,
+			semanticCharset : {"ADJ": 0,"ADV": 0,"INTJ": 0,"NOUN": 0,"PROPN": 0,"VERB": 0,"ADP": 0,"AUX": 0,"CONJ": 0,"CCONJ": 0,"DET": 0,"NUM": 0,"PART": 0,"PRON": 0,"SCONJ": 0,"PUNCT": 0,"SYM": 0, "UKN": 0},
+			semanticPosition : {},
 			semanticSum : {},
 			semanticCharcount : 0,
 			semanticFr : {},
@@ -54,7 +56,6 @@ var Heatmap = function (filename, semantic,state, parent) {
 					: (state.charSet[pw[i]] += rawData[pw]);
 			}
 		}
-
 		//Build this	
 		for (i = 1; i <= state.maxLength; i++) {
 			if (state.position[i] == undefined) {
@@ -390,9 +391,55 @@ var Heatmap = function (filename, semantic,state, parent) {
 		if (lang == 'en') {
 			state.semanticEn = data;
 		}
-		for (var key in data) {
-			state.semanticSum[key] = data[key].reduce((a,b)=> a+b, 0)
-			state.semanticCharcount += state.semanticSum[key]
+		// 1 , [[Noun], 1]
+		//stats
+		for (pw in data) {
+			if (state.maxLength < data[pw][0].length) state.maxLength = data[pw][0].length;
+
+			state.semanticCharcount += data[pw][0].length * data[pw][1];
+
+			for (i = 0; i < data[pw][0].length; ++i) {
+				state.semanticCharset[data[pw][i]] == undefined
+					? (state.semanticCharset[data[pw][0][i]] = data[pw][1])
+					: (state.semanticCharset[data[pw][0][i]] += data[pw][1]);
+			}
+		}
+		//Build this
+		for (i = 1; i <= state.maxLength; i++) {
+			if (state.semanticPosition[i] == undefined) {
+				state.semanticPosition[i] = {
+					chars: {},
+					words: {},
+				};
+			}
+
+			for (c in state.semanticCharset) {
+				if (state.semanticPosition[i].chars[c] == undefined) {
+					state.semanticPosition[i].chars[c] = 0;
+				}
+			}
+		}
+		//Populate this
+		for (pw in data) {
+			var len = data[pw][0].length;
+
+			for (cpos = 0; cpos < data[pw][0].length; cpos++) {
+				var pos = cpos + 1;
+				var c = data[pw][0][cpos];
+
+				//Character frequency
+				state.semanticPosition[pos].chars[c] += data[pw][1];
+
+				//Max char freq
+				if (state.maxCharFreq < state.position[pos].chars[c]) {
+					state.maxCharFreq = state.semanticPosition[pos].chars[c];
+				}
+
+				//Add word
+				if (pos == len) {
+					state.semanticPosition[len].words[pw] = data[pw][0];
+				}
+			}
 		}
 	};
 
