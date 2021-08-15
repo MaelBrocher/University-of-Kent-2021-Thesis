@@ -2,9 +2,7 @@ Make sure to have python3 install</br>
 if not : </br>
 sudo apt-get install python3
 Then do :</br>
-sudo apt-get install python3-pip python3-venv
-python3 -m venv env</br>
-source env/bin/activate</br>
+sudo apt-get install python3-pip
 pip install --upgrade pip</br>
 pip install setuptools wheel spacy flask langid</br>
 python -m spacy download en_core_web_sm
