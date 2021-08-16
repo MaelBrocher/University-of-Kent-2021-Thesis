@@ -13,7 +13,7 @@ import langid
 frenchSpacy = spacy.load("fr_core_news_sm")
 germanSpacy = spacy.load("de_core_news_sm")
 englishSpacy = spacy.load("en_core_web_sm")
-n = open("../../data/NAMES.txt")
+n = open("../data/NAMES.txt")
 names = n.read().split('\n')
 
 class MyThread (threading.Thread):
