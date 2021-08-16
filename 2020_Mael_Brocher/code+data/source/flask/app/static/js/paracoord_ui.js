@@ -933,7 +933,8 @@ var ParacoordUI = function (config, options) {
                 } else if (onExit == false && onClick == false && isSelected == false) {
                     polyline.style('stroke', 'red').style('stroke-opacity', 1).style('stroke-width', 3);
                     tip.text('Word: ' + d.word).style('fill', '#000');
-                    strengthBar.attr('class', 'show').attr('width', strength.value * strengthBar.attr('maxWidth') + 'px');
+                    if (heatmaps[i].getIsSemantic() == false)
+                        strengthBar.attr('class', 'show').attr('width', strength.value * strengthBar.attr('maxWidth') + 'px');
 
                 } else if (onClick == true) {
 

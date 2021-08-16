@@ -595,7 +595,6 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
 
                 points += x1 + ',' + y1 + ' ' + x2 + ',' + y2 + ' ';
             }
-
             //Draw polyline
             var line = ui.svg.append('polyline').attr('id', '_' + word).attr('points', points).style('fill', 'none').style('stroke', 'black').style('stroke-width', '1').style('stroke-opacity', 1)
                 .on('mouseover', function () {
@@ -613,9 +612,54 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 line.attr('class', 'checkPassword');
             }
         } catch (err) {
+            console.log(err)
             return 1;
         }
 
+        if (heatmap.isSemantic == true) {
+                    //Accumilate points of the word
+            try {
+                var points = '';
+                for (var i = 0; i < word.length - 1; i++) {
+                    console.log(i)
+                    console.log(word[i])
+                    var c1 = word[i];
+                    var pos1 = i + 1;
+                    var c2 = word[i + 1];
+                    var pos2 = i + 2;
+
+                    var b1 = d3.select(document.getElementById('_' + c1 + '_' + pos1)).filter(function (d) { if (d.c == c1 && d.pos == pos1) return this; }).node().getBBox();
+                    var b2 = d3.select(document.getElementById('_' + c2 + '_' + pos2)).node().getBBox();
+
+                    var x1 = b1.x + b1.width / 2;
+                    var y1 = b1.y + b1.height / 2;
+                    var x2 = b2.x + b2.width / 2;
+                    var y2 = b2.y + b2.height / 2;
+
+                    points += x1 + ',' + y1 + ' ' + x2 + ',' + y2 + ' ';
+                }
+                //Draw polyline
+                var line = ui.svg.append('polyline').attr('id', '_' + word).attr('points', points).style('fill', 'none').style('stroke', 'black').style('stroke-width', '1').style('stroke-opacity', 1)
+                    .on('mouseover', function () {
+                        parentui.highlightPolyline({ 'word': word }, false, false);
+                    })
+                    .on('mouseout', function () {
+                        var freq = heatmap.getState().position[word.length].words[word]
+                        parentui.highlightPolyline({ 'word': word }, true, false);
+                    })
+                    .on('click', function () {
+                        parentui.highlightPolyline({ 'word': word }, false, true);
+                    })
+
+                if (isCheckPassword == true) {
+                    line.attr('class', 'checkPassword');
+                }
+            } catch (err) {
+                console.log(err)
+                return 1;
+            }
+        }
+        
         return 0;
     }
 
@@ -770,12 +814,18 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
 
 
     var drawTop = function (n) {
-        var words = heatmap.getWordsOrderByFrequency();
+        var words = heatmap.isSemantic == true ? heatmap.getSemanticOrderByFrequency() :heatmap.getWordsOrderByFrequency() ;
 
         n = (words.length < n) ? words.length : n;
 
         for (var i = 0; i < n; i++) {
-            drawWord(Object.keys(words[i])[0]);
+            if (heatmap.isSemantic) 
+            {
+                drawWord(words[i]);
+            }
+            else {
+                drawWord(Object.keys(words[i])[0]);
+            }
         }
     }
 

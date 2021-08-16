@@ -511,6 +511,46 @@ var Heatmap = function (filename, semantic,state, parent) {
 		return wordsArr;
 	};
 
+	var getWordsSemantic = function(n,m) {
+		var words = {}
+		if (m == undefined) {
+			words = state.semanticPosition[n].words;
+		} else {
+			//For each position
+			for (i = n; i <= m; i++) {
+				//For each word add it and its freq
+				for (w in state.semanticPosition[i].words) {
+					var wfreq = state.semanticPosition[i].words[w];
+					if (words[w] == undefined) {
+						words[w] = wfreq;
+					} else {
+						words[w] += wfreq;
+					}
+				}
+			}
+		}
+		return words;
+
+	}
+
+	var getSemanticOrderByFrequency = function () {
+		var words = getWordsSemantic(1, state.maxLength);
+		var orderedKeys = [];
+		var wordsArr = [];
+
+		orderedKeys = Object.keys(words).sort(function (a, b) {
+			return words[a] - words[b];
+		});
+
+		for (var i = 0; i < orderedKeys.length; i++) {
+			var w = orderedKeys[i];
+			var wfreq = words[w];
+			wordsArr.push(wfreq);
+		}
+		return wordsArr;
+
+
+	}
 	/**
 	 * Get this heatmaps word set ordered by its frequency
 	 * @return Ordered character array by frequency
@@ -530,7 +570,7 @@ var Heatmap = function (filename, semantic,state, parent) {
 			wordsArr.push({ [w]: wfreq });
 		}
 
-		return wordsArr.reverse();
+		return wordsArr;
 	};
 
 	var getRemovedWords = function () {
@@ -571,7 +611,7 @@ var Heatmap = function (filename, semantic,state, parent) {
 
 		setSemantic : setSemantic,
 
-
+		getSemanticOrderByFrequency : getSemanticOrderByFrequency,
 		getCharSetOrderByAlphabet: getCharSetOrderByAlphabet,
 		getCharSetOrderByFrequency: getCharSetOrderByFrequency,
 		getWordsOrderByAlphabet: getWordsOrderByAlphabet,
