@@ -17,6 +17,7 @@ var Heatmap = function (filename, semantic,state, parent) {
 			parent: undefined,
 			child: undefined,
 			lang : "fr",
+			//added everything concerning semantic
 			isSemantic : semantic,
 			semanticCharset : {"ADJ": 0,"ADV": 0,"INTJ": 0,"NOUN": 0,"PROPN": 0,"VERB": 0,"ADP": 0,"AUX": 0,"CONJ": 0,"CCONJ": 0,"DET": 0,"NUM": 0,"PART": 0,"PRON": 0,"SCONJ": 0,"PUNCT": 0,"SYM": 0, "UKN": 0},
 			semanticPosition : {},
@@ -97,7 +98,7 @@ var Heatmap = function (filename, semantic,state, parent) {
 	};
 
 	/**
-	 *
+	 * set axis and create a child
 	 */
 	 var reOrderAxis = function (n, bool) {
 		state.isSemantic = bool
@@ -364,28 +365,23 @@ var Heatmap = function (filename, semantic,state, parent) {
 	};
 
 	/**
-	 * @return French Semantic heatmap
+	 * @return Semantic heatmap
 	 */
 	 var getSemantic = function () {
 		if (state.lang == 'fr')
 			return state.semanticFr;
-		if (state.lang == 'de')
-			return state.semanticDe;
 		if (state.lang == 'en')
 			return state.semanticEn;
 	};
 
 	/**
-	 * @set French Semantic heatmap
+	 * @set Semantic heatmap and position
 	 */
 	 var setSemantic = function (data, lang) {
 		state.lang = lang
 		if (lang == 'fr')
 		{
 		state.semanticFr = data;
-		}
-		if (lang == 'de') {
-			state.semanticDe = data;
 		}
 		if (lang == 'en') {
 			state.semanticEn = data;

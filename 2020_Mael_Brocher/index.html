@@ -2,7 +2,8 @@
    <head>
        <title>maeb3 Index</title>
       <style type="text/css">
-         html {font-family: Arial, Helvetica, sans-serif;}
+         html {font-family: Arial, Helvetica, sans-serif;
+            overflow-y: hidden;}
          .container {
              margin-left: 30px;
   display: grid; 
@@ -44,9 +45,6 @@ margin-left: 15px; }
          margin-right: 60px;
          }
          .white2 {
-         margin: 0;
-         top: 50%;
-         left: 50%;
          background-color: white;
          padding: 10px;
          border-radius: 10px;
@@ -89,7 +87,8 @@ margin-left: 15px; }
             <h4 style="margin-block-start: 0;">Index of maeb3's C0880 Corpus</h4>
             These directories contain everything needed to compile and use the project.<br><br>
             The first one, ./Source/, is the JavaScript/Python and HTML + CSS. It's a website deploy locally on <a target="_blank" href="http://localhost:5000/">localhost:5000</a>. <br>Follow the README.md to run the project. <br><br>
-            The second directory is data I used to test and improve the project. It came from Gary Read that started the project in 2016.<br><br><br>
+            The second directory is data I used to test and improve the project. It came from Gary Read that started the project in 2016.<br><br>
+            And finally the last one contains screenshots of use cases of the project.<br><br>
             <b style="font-size: small;">made by Maël Brocher and supervised by Professor Shujun Li</b>
         </div>
         <div class="white0">
@@ -168,6 +167,10 @@ And open your browser at <a target="_blank" href="localhost:5000">localhost:5000
          </div>
       </div>
       <div class="div3">
+         <div style="         margin: 0;
+         top: 50%;
+         left: 50%;
+         transform: translate(0%, -11%);">
          <div class="white2">
             <h4 style="margin-block-start: 0;margin-block-end: 0.66em;">./Data/</h4>
             <ul class="dashed">
@@ -206,6 +209,20 @@ And open your browser at <a target="_blank" href="localhost:5000">localhost:5000
                <li><a target="_blank" href="./data/word-data/spanish.dic">data/word-data/spanish.dic</a></li>
             </ul>
          </div>
+         <div class="white2" style="margin-top: 15px;">
+            <h4 style="margin-block-start: 0;margin-block-end: 0.66em;">./Use cases/</h4>
+            <ul class="dashed">
+               <i>English passwords tends to use more frequently numbers than French ones</i>
+               <li><a href="./use-case/heatmap difference from semantic.png">./use-case/heatmap difference from semantic.png</a></li>
+               <li><a href="./use-case/heatmap difference from semantic2.png">./use-case/heatmap difference from semantic2.png</a></li>
+               <li><a href="./use-case/heatmap difference from semantic3.png">./use-case/heatmap difference from semantic3.png</a></li>
+               <i>English passwords use more proper noun and number and use less first names than French passwords</i>
+               <li><a href="./use-case/semantic difference.png">./use-case/semantic difference.png</a></li>
+               <i>Password in common with dictionnaries are in general short words</i>
+               <li><a href="./use-case/Shorter password.png">./use-case/Shorter password.png</a></li>
+            </ul>
+         </div>
+      </div>
       </div>
    </body>
 </html>

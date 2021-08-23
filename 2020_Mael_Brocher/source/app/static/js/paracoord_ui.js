@@ -15,7 +15,7 @@ var ParacoordUI = function (config, options) {
     var offset = { 'x': 0, 'y': 0 };
 
     var init = function () {
-        // if (config.debug) out('init')
+        if (config.debug) out('init')
 
         self = this;
         initUploadButton();
@@ -33,7 +33,7 @@ var ParacoordUI = function (config, options) {
 
 
     function initUploadButton() {
-        // if (config.debug) out('initUploadButton')
+        if (config.debug) out('initUploadButton')
 
         ui.fileInput = d3.select('body').append('input').attr('type', 'file').attr('id', 'fileInput').attr('id', 'fileInput').attr('multiple', true);
         ui.btnUpload = d3.select('body').append('button').attr('id', 'uploadButton').attr('title', 'Add Files').text('+');
@@ -55,7 +55,7 @@ var ParacoordUI = function (config, options) {
 
 
     function initConfigButton() {
-        // if (config.debug) out('initConfigButton')
+        if (config.debug) out('initConfigButton')
 
         ui.btnConfig = d3.select('body').append('button').attr('id', 'configButton').html('&#128295;').attr('title', 'Selected Heatmap Configuration');
 
@@ -81,7 +81,7 @@ var ParacoordUI = function (config, options) {
 
 
     function initConfigForm() {
-        // if (config.debug) out('initConfigForm')
+        if (config.debug) out('initConfigForm')
 
         //inner and outer form containers
         ui.config = {};
@@ -147,11 +147,6 @@ var ParacoordUI = function (config, options) {
         form.selCharacterSet = div.append('select');
         form.selCharacterSet.append('option').attr('disabled', 'true').attr('selected', 'selected').style('display', 'none').text('Select Character Set');
 
-        //axis order
-        //        div.append('label').attr('class','configLabel').text('Axis Order');
-        //        form.selAxisOrder = div.append('select');
-        //        form.selAxisOrder.append('option').attr('disabled','true').attr('selected','selected').style('display','none').text('Select Axis Order');
-
         //max length
         div.append('label').attr('class', 'configLabel').text('Max Length');
         form.lblMaxLength = div.append('label').attr('class', 'configValue').text(config.maxLength);
@@ -199,15 +194,11 @@ var ParacoordUI = function (config, options) {
             updateExplorer();
         });
 
-        //Axis order
-        //        form.selAxisOrder.on('change',function() {
-        //            updateHeatmapCore();
-        //        });
     }
 
 
     function initHeatmapExplorer() {
-        // if (config.debug) out('initHeatmapExplorer')
+        if (config.debug) out('initHeatmapExplorer')
 
         ui.exp = {};
         ui.exp.cont = d3.select('body').append('div').attr('class', 'explorer');
@@ -266,8 +257,11 @@ var ParacoordUI = function (config, options) {
         svgOptions.append('label').text('Cell Width');
         svgOptions.append('label').text('Cell Height');
         exp.sprCellWidth = svgOptions.append('input').attr('type', 'number').attr('id', 'sprCellWidth').attr('value', config.cw).attr('title', 'Selected Heatmap cell widths');
+
+        //add the zoom in / zoom out option
         ui.btnZoomIn = svgOptions.append('button').attr('class', 'btnZoomIn').text('+');
         ui.btnZoomOut = svgOptions.append('button').attr('class', 'btnZoomOut').text('-');
+
         exp.sprCellHeight = svgOptions.append('input').attr('type', 'number').attr('id', 'sprCellHeight').attr('value', config.ch).attr('title', 'Selected Heatmap cell height');
 
 
@@ -277,12 +271,14 @@ var ParacoordUI = function (config, options) {
         exp.btnFlipy = svgOptions.append('button').attr('id', 'btnFlipy').text('Flip Y').attr('style', "min-height: 25px;min-width: 100px;").attr('title', 'Flip Y-axis for selected Heatmaps');
         exp.selFlipy = svgOptions.append('input').attr('class', 'hidden').attr('id', 'selFlipy').attr('style', "min-height: 25px;min-width: 100px;").attr('type', 'checkbox');
 
+        //create the Axis management section
         exp.inputWordsAxis = axisMenu.append('input').attr('id', 'inputWordsAxis').attr('type', 'text').attr('placeholder', 'word, password');
         exp.btnWordsAxis = axisMenu.append('button').attr('id', 'btnWordsAxis').text('Re-Order Axis');
         exp.selAxisOrder = axisMenu.append('select').style('width', '');
         exp.selAxisOrder.append('option').attr('disabled', 'true').attr('selected', 'selected').style('display', 'none').text('Select Axis Order');
         exp.btnAxisOrderApply = axisMenu.append('button').attr('id', 'btnAxisOrderApply').text('Apply Order')
 
+        //create the semantic section
         exp.btnSemanticFr = semanticMenu.append('button').attr('id', 'btnSemanticFr').text('French Semantic').attr('style', "margin-right:7px")
         exp.btnSemanticEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic').attr('style', "margin-right:7px")
         exp.inputSemantic = semanticMenu.append('input').attr('id', 'inputSemantic').attr('type', 'text').attr('placeholder', 'NOUN + NUM');
@@ -305,7 +301,6 @@ var ParacoordUI = function (config, options) {
             getSemanticHeatmap('en')
             updateHeatmapCore();
         });
-
 
         exp.btnAxisOrderApply.on('click', function () {
             OrderAxis();
@@ -562,7 +557,7 @@ var ParacoordUI = function (config, options) {
                 if (document.getElementById('loadertxt'+name).innerText == "Semantic loading...") {
                     names += "\n" + name
                 }
-                else
+                else//call the Python server
                     runPyScriptSemanticHeatmap(name, lang, dict,ui.exp.inputSemantic.node().value);
             }
         }
@@ -582,9 +577,7 @@ var ParacoordUI = function (config, options) {
             }
         }
     }
-    function isEmpty(obj) {
-        return Object.keys(obj).length === 0;
-      }
+
     var updateHeatmapColour = function () {
         out('updateHeatmapColour')
 

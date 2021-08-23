@@ -36,12 +36,14 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         ui.btnParent = div.append('button').attr('class', 'btnParent').text('Parent').property('disabled', true);
         ui.btnChild = div.append('button').attr('class', 'btnChild').text('Child').property('disabled', true);
         ui.btnCopyHM = div.append('button').attr('class', 'copyHeatmap').text('Copy');
+        //add the loader while the server didn't respond
         if (heatmap.isSemantic == false) {
             ui.loader = div.append('div').attr('class', 'loaderheatmap').attr('id', 'loader'+ heatmap.getName()).style('visibility', 'visible')
             ui.loadertxt = div.append('div').attr('class', 'loadertext').attr('id', 'loadertxt'+ heatmap.getName()).text("Semantic loading...")
             ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready' + heatmap.getName()).style('visibility', 'hidden')
         }
         else {
+            //add link to Part Of Speech (POS) documentation
             ui.PosDoc = div.append('form').attr('target', '_blank').attr('display', 'block').attr('action', 'https://universaldependencies.org/docs/u/pos/').append('button').attr('type', 'submit').attr('display', 'block').text('i')
         }
         parentui.updateSelected();
@@ -152,6 +154,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                             words2[word] = newFreq;
                         }
                     }
+                    //create the set difference of two heatmaps
                 } else if (e.srcElement.id == "btnSetDifference") {
                     heatmap_name = "Difference " + heatmap.getName() + " " + draggedHeatmapUI.getName();
                     console.log("Difference");
@@ -172,7 +175,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                         }
                     }
                     words1 = copy;
-                    //Some new drag and drop feature button
+                    //create the set intersection of two heatmaps
                 } else if (e.srcElement.id == "btnSetIntersection") {
                     heatmap_name = "Intersection " + heatmap.getName() + " " + draggedHeatmapUI.getName();
                     console.log("Intersection");
@@ -199,7 +202,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 }
 
                 //Create new heatmap
-                var newhm = new Heatmap(heatmap_name, heatmap.isSemantic, undefined, undefined);
+                var newhm = new Heatmap( heatmap_name, true, undefined, undefined);
                 newhm.buildHeatmap(words1, false, options.charSet[config.charSet]);
                 if (e.srcElement.id == "btnNormalMerge")
                     newhm.buildHeatmap(words2, true, options.charSet[config.charSet]);
@@ -310,6 +313,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         charSet = applyAxisOrder(axisOrder, charSet, axisWord, isSemantic);
         if (isSemantic == true) {
             cw *= 3.4
+            //wider column if it's a semantic heatmap
         }
         for (x = 0; x < charSet.length; x++) {
             var c = charSet[x]
@@ -330,16 +334,10 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 //Cells
                 ui.svg.append('g').append('rect').attr('class', 'cell').attr('id', '_' + c + '_' + pos).attr('x', (x * cw) + hw).attr('y', (y * ch) + hh).attr('width', cw).attr('height', ch).style('stroke', 'grey').style('fill', 'none').attr('width', cw).attr('height', ch).style('stroke-width', '0')
                     .on('mouseover', function (d) {
-                        if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic}, false);
-                        else
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic}, false);
+                        parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic}, false);
                     })
                     .on('mouseout', function (d) {
-                        if (isSemantic)
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic }, true);
-                        else
-                            parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic }, true);
+                        parentui.highlightCell({ 'c': d.c, 'pos': d.pos, 'semantic': isSemantic }, true);
                     });
                 try {
                     var cfreq = 0
@@ -440,6 +438,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         return ui.svg;
     }
 
+    //return the AxisOrder
     var applyAxisOrder = function (axisOrder, charSet, axisWord, isSemantic) {
         var state = heatmap.getState();
         var returnme = "";

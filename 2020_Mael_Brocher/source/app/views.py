@@ -23,13 +23,15 @@ frfilenames = open("./wordlists/FrNames.txt")
 FrNamesLower = dict.fromkeys(frfilenames.read().split('\n'), None)
 FrNamesUpper = dict.fromkeys([n.upper() for n in frfilenames.read().split('\n')], None)
 FrNamesTitle = dict.fromkeys([n.title() for n in frfilenames.read().split('\n')], None)
+frfilenames.close()
 
 enfilenames = open("./wordlists/EnNames.txt")
 EnNamesLower = dict.fromkeys(enfilenames.read().split('\n'), None)
 EnNamesUpper = dict.fromkeys([n.upper() for n in enfilenames.read().split('\n')], None)
 EnNamesTitle = dict.fromkeys([n.upper() for n in enfilenames.read().split('\n')], None)
+enfilenames.close()
 
-
+#check if wordninja didn't create small group of 1 letter, if yes it will be removed
 def remove(res):
     i = 0
     for r in res:
@@ -39,6 +41,7 @@ def remove(res):
         return True
     return False
 
+#check if the semantic is in the array
 def check(sem, needs):
     res = list(np.intersect1d(sem, needs))
     if res == needs:
@@ -46,6 +49,7 @@ def check(sem, needs):
         return sorted(indexs) == list(range(min(indexs), max(indexs)+1))
     return False
 
+#return words based on the semantic needed if nothing asked return only the word in the language asked
 def get_hm_from_semantic(words, req, lang):
     dict = {}
     needs = req.split('+')
@@ -61,6 +65,7 @@ def get_hm_from_semantic(words, req, lang):
 
     return dict
 
+#return the semantic of a heatmap, on {words : occurence} format
 def extractSemantic(words, lang):
     tmp = {}
     addme = True
@@ -81,6 +86,7 @@ def extractSemantic(words, lang):
         addme = True
     return tmp
 
+#list of heatmaps stored in the server
 class Heatmaps ():
     def __init__(self):
         self.heatmaps = []
@@ -97,6 +103,7 @@ class Heatmaps ():
             s += h.name + "\n"
         return s
 
+#Heatmap storage
 class Heatmap ():
     def __init__(self, name):
         self.name = name
@@ -110,10 +117,12 @@ class Heatmap ():
     def setData(self,data):
         self.data = data
 
+#return the html template of the webpage
 @app.route("/")
 def index():
     return render_template("home.html")
 
+#API route called when a heatmap is upload. it can take to 3min for the biggest wordlists
 @app.route('/uploadHeatmap', methods=['POST'])
 def uploadHeatmap():
     if request.method == 'POST':
@@ -141,8 +150,7 @@ def uploadHeatmap():
                 if password.lower() in FrNamesLower or password.title() in FrNamesTitle or password.upper() in FrNamesUpper:
                     words[password] = [['NAME'],'fr', number]
                     continue
-                
-                if password.lower() in EnNamesLower or password.title() in EnNamesTitle or password.upper() in EnNamesUpper:
+                elif password.lower() in EnNamesLower or password.title() in EnNamesTitle or password.upper() in EnNamesUpper:
                     words[password] = [['NAME'],'en', number]
                     continue
 
@@ -176,6 +184,7 @@ def uploadHeatmap():
         resp.headers.add('Access-Control-Allow-Methods', 'POST')
         return resp
 
+#API route that return the dict of words of a heatmap base on the semantic needed
 @app.route('/heatmapFromSemantic', methods=['POST'])
 def semantic_heatmap():
     if request.method == 'POST':
@@ -192,16 +201,8 @@ def semantic_heatmap():
         resp.headers.add('Access-Control-Allow-Headers', 'Authorization, Content-Type')
         resp.headers.add('Access-Control-Allow-Methods', 'POST')
         return resp
-    
-@app.route('/heatmap', methods=['GET'])
-def retHeatmaps():
-    if request.method == 'GET' :
-        res = "None"
-        if heatmaps.getNames() != "":
-            res = heatmaps.getNames()
-        resp = make_response(res)
-        return resp
 
+#API route that return semantic heatmap
 @app.route('/semantic', methods=['POST'])
 def semantic():
     if request.method == 'POST':

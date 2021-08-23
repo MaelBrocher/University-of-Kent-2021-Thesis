@@ -1,3 +1,4 @@
+//Added AxisOrder and AxisWord
 var config = {
     "debug" : true,
     "cw": 10, //cell width
@@ -17,8 +18,8 @@ var config = {
     "impossibleCells"   : "grey",
     "colourMode"        : "inverseAlpha",
     "alpha"             : 2.5,
-    "axisOrder"         : "alphabetical",
-    "axisWord" : "",
+    "axisOrder"         : "alphabetical",//Order axis by frequency or by alphabetical
+    "axisWord" : "", //To add a word in the axis, for example if axisWord = password, the axiswill be paswordbcefghijklmnqrtuvxyz
 
 };
 var options = {
