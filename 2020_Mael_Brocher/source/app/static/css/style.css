@@ -375,7 +375,7 @@ div#corrContainer {
 .expOptions input {
 	min-height: 18px;
 	min-width: 25px;
-	max-width: 44%;
+	max-width: 40%;
 	margin-bottom: 10px;
 	margin-left: 10px;
 	text-align: center;
@@ -388,8 +388,8 @@ div#corrContainer {
 
 .expStats {
 	font-size: 14px;
-	max-height: 40%;
-	min-height: 40%;
+	max-height: 30%;
+	min-height: 30%;
 	border-bottom: 1px solid #ddd;
 	padding: 5px;
 	overflow-y: auto;

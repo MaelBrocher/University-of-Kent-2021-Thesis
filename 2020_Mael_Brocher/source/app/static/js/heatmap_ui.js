@@ -4,7 +4,7 @@
 var draggedHeatmapUI;
 var draggedOverElement = undefined;
 
-var HeatmapUI = function (heatmap, parentui, config, options) {
+var HeatmapUI = function (heatmap, parentui, config, options, maxfrequence, parentname) {
 
     var self;
     var id = Math.floor(Math.random() * 100000);
@@ -12,10 +12,12 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
     var selected = false;
     var words = [];
     var mean = {};
-
+    var maxfrequence = (maxfrequence == undefined) ? 0 : maxfrequence;
+    var parentname = (parentname == undefined) ? "" : parentname;
     var STRENGTH_SCALE_FACTOR = 6;
 
     var ui = {};
+    var freqs = {};
     var parentui = parentui;
     var heatmap = (heatmap == undefined) ? new Heatmap('') : heatmap;
     var config = (config == undefined) ? defaultConfig : Object.create(config);
@@ -41,11 +43,43 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
             ui.loader = div.append('div').attr('class', 'loaderheatmap').attr('id', 'loader'+ heatmap.getName()).style('visibility', 'visible')
             ui.loadertxt = div.append('div').attr('class', 'loadertext').attr('id', 'loadertxt'+ heatmap.getName()).text("Semantic loading...")
             ui.ready = div.append('div').attr('class', 'loadingReady').attr('id', 'ready' + heatmap.getName()).style('visibility', 'hidden')
+            ui.parentfreq = div.append('select').attr('id', 'selectParentFreq' + heatmap.getName()).style('display', 'block')
+            ui.parentfreq.append('option').attr('value', "").text('Default MaxFrequency')
+            if (maxfrequence != 0) {
+                ui.parentfreq.append('option').attr('value', parentname ).text(parentname)
+                document.getElementById('selectParentFreq' + heatmap.getName()).selectedIndex = 1;
+
+            }
+            ui.parentfreq.on('click', function () {
+                hms = parentui.getHeatmaps();
+                hms.forEach(function (h) {
+                    if (h.getName() == heatmap.getName()){
+                        freqs[heatmap.getName()] = heatmap.getState().maxCharFreq;
+                    }
+                    else {
+                        freqs[h.getName()] = h.getState().maxCharFreq;
+                        if (isAlreadyInSelect(h.getName()) == false) {
+                            ui.parentfreq.append('option').attr('value', h.getName() ).text(h.getName())
+                        }
+                    }
+                })
+            })
+            ui.parentfreq.on('change', function () {
+                if (document.getElementById('selectParentFreq'+ heatmap.getName()).value == "") {
+                    maxfrequence = freqs[heatmap.getName()]
+                }
+                else {
+                    maxfrequence = freqs[document.getElementById('selectParentFreq' + heatmap.getName()).value]
+                }
+                drawHeatmap();
+
+            })
         }
         else {
             //add link to Part Of Speech (POS) documentation
             ui.PosDoc = div.append('form').attr('target', '_blank').attr('display', 'block').attr('action', 'https://universaldependencies.org/docs/u/pos/').append('button').attr('type', 'submit').attr('display', 'block').text('i')
         }
+
         parentui.updateSelected();
         ui.btnSelect.on('click', function () {
             selected = (selected == true) ? false : true;
@@ -72,7 +106,15 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
 
         drawHeatmap();
     }
-
+    var isAlreadyInSelect = function (name) {
+        ret = false
+        for (i = 0; i < document.getElementById("selectParentFreq" + heatmap.getName()).length; ++i){
+            if (document.getElementById("selectParentFreq"+ heatmap.getName()).options[i].value == name){
+                ret = true
+            }
+        }
+        return ret
+    }
 
     var initDragEvents = function () {
         ui.cont.node().addEventListener('dragstart', handleDragStart, false);
@@ -179,11 +221,11 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 } else if (e.srcElement.id == "btnSetIntersection") {
                     heatmap_name = "Intersection " + heatmap.getName() + " " + draggedHeatmapUI.getName();
                     console.log("Intersection");
-                    var keys = new Set(Object.keys(words1));
-                    var keys2 = new Set(Object.keys(words2));
-                    var diff = new Set([...keys].filter(x => keys2.has(x)));
+                    var heatmapdragged = new Set(Object.keys(words1));
+                    var targetHeatmap = new Set(Object.keys(words2));
+                    var intersection = new Set([...heatmapdragged].filter(x => targetHeatmap.has(x)));
                     var copy = new Array();
-                    var diffArray = Array.from(diff)
+                    var diffArray = Array.from(intersection)
                     for (var i = 0; i < diffArray.length; i++) {
                         var d = diffArray[i]
                         var oldfreq = words1[d];
@@ -202,7 +244,8 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 }
 
                 //Create new heatmap
-                var newhm = new Heatmap( heatmap_name, true, undefined, undefined);
+                var newhm = new Heatmap( heatmap_name, false, undefined, undefined);
+                newhm.isSemantic = false
                 newhm.buildHeatmap(words1, false, options.charSet[config.charSet]);
                 if (e.srcElement.id == "btnNormalMerge")
                     newhm.buildHeatmap(words2, true, options.charSet[config.charSet]);
@@ -298,7 +341,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
         var axisOrder = state.axisOrder;
         var maxLength = (config.maxLength == -1) ? state.maxLength : config.maxLength;
         var charSet = options.charSet[config.charSet];
-        var maxFreq = 0;
+        var maxFreq = maxfrequence;
 
         var axisWord = config.axisWord;
         var isSemantic = heatmap.isSemantic
@@ -441,7 +484,7 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
     //return the AxisOrder
     var applyAxisOrder = function (axisOrder, charSet, axisWord, isSemantic) {
         var state = heatmap.getState();
-        var returnme = "";
+        var newCharSet = "";
         if (isSemantic == true) {
             charSet = ["NAME","ADJ","ADV","INTJ","NOUN","PROPN","VERB","ADP","AUX","CCONJ","DET","NUM","PART","PRON","SCONJ","PUNCT","SYM", "UKN",]
             if (axisOrder == "alphabetical") {
@@ -455,15 +498,15 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                     data.push({ value: cfreq, name: c });
                 }
                 data.sort(function (a, b) { return b.value - a.value; });
-                returnme = []
+                newCharSet = []
                 for (var i = 0 ; i < charSet.length; i++) {
-                    returnme.push(data[i].name)
+                    newCharSet.push(data[i].name)
                 }
-                return returnme
+                return newCharSet
             }
         }
         if (axisOrder == "alphabetical")
-            returnme = options.charSet[config.charSet];
+            newCharSet = options.charSet[config.charSet];
         else if (axisOrder == "frequency") {
             var data = [];
             for (var i = 0; i < charSet.length; i++) {
@@ -472,13 +515,12 @@ var HeatmapUI = function (heatmap, parentui, config, options) {
                 data.push({ value: cfreq, name: c });
             }
             data.sort(function (a, b) { return b.value - a.value; });
-            for (i = 0; i < charSet.length; i++) {
-                returnme += data[i].name;
-            }
+            for (i = 0; i < charSet.length; i++)
+                newCharSet += data[i].name;
         }
         if (axisWord != "")
-            returnme = removeDuplicateCharacters(axisWord + returnme)
-        return returnme;
+            newCharSet = removeDuplicateCharacters(axisWord + newCharSet)
+        return newCharSet;
     }
     var removeDuplicateCharacters = function (string) {
         return string

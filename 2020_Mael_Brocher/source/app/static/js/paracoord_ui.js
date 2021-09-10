@@ -204,7 +204,7 @@ var ParacoordUI = function (config, options) {
         ui.exp.cont = d3.select('body').append('div').attr('class', 'explorer');
 
         var xcont = ui.exp.cont.append('div').attr('id', 'container');
-        ui.exp.pwChecker = xcont.append('div').attr('class', 'expPwChecker');
+        ui.exp.pwChecker = xcont.append('div').attr('class', 'expPwChecker').style('overflow-x','hidden');
 
         xcont.append('label').attr('class', 'expHeader').text('General');
         ui.exp.svgOptions = xcont.append('div').attr('class', 'expOptions');
@@ -257,12 +257,12 @@ var ParacoordUI = function (config, options) {
         svgOptions.append('label').text('Cell Width');
         svgOptions.append('label').text('Cell Height');
         exp.sprCellWidth = svgOptions.append('input').attr('type', 'number').attr('id', 'sprCellWidth').attr('value', config.cw).attr('title', 'Selected Heatmap cell widths');
+        exp.sprCellHeight = svgOptions.append('input').attr('type', 'number').attr('id', 'sprCellHeight').attr('value', config.ch).attr('title', 'Selected Heatmap cell height');
 
         //add the zoom in / zoom out option
         ui.btnZoomIn = svgOptions.append('button').attr('class', 'btnZoomIn').text('+');
         ui.btnZoomOut = svgOptions.append('button').attr('class', 'btnZoomOut').text('-');
 
-        exp.sprCellHeight = svgOptions.append('input').attr('type', 'number').attr('id', 'sprCellHeight').attr('value', config.ch).attr('title', 'Selected Heatmap cell height');
 
 
         exp.btnSelectAll = svgOptions.append('button').text('Select All').attr('title', 'Select all Heatmaps').attr('style', "min-height: 25px;min-width: 100px;").on('click', function () {
@@ -281,9 +281,14 @@ var ParacoordUI = function (config, options) {
         //create the semantic section
         exp.btnSemanticFr = semanticMenu.append('button').attr('id', 'btnSemanticFr').text('French Semantic').attr('style', "margin-right:7px")
         exp.btnSemanticEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('English Semantic').attr('style', "margin-right:7px")
-        exp.inputSemantic = semanticMenu.append('input').attr('id', 'inputSemantic').attr('type', 'text').attr('placeholder', 'NOUN + NUM');
-        exp.btnSemanticHeatmapFr = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('Fr').attr('style', "margin-right:7px")
-        exp.btnSemanticHeatmapEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('En').attr('style', "margin-right:7px")
+        exp.Label1 = semanticMenu.append('label').text("Extract Part of speech combinations :").attr('style', 'margin-left:5px')
+        exp.testdiv1 = semanticMenu.append('div').attr('style', 'margin-bottom:5px')
+        exp.inputSemantic = semanticMenu.append('input').attr('id', 'inputSemantic').attr('type', 'text').attr('placeholder', '"NOUN + NUM" e.g.').attr('style', "margin-bottom:5px");
+        exp.Label2 = semanticMenu.append('label').text("in")
+        exp.btnSemanticHeatmapFr = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('Fr').attr('style', "margin-right:7px;margin-bottom:5px")
+        exp.btnSemanticHeatmapEn = semanticMenu.append('button').attr('id', 'btnSemanticEn').text('En').attr('style', "margin-right:7px;margin-bottom:5px")
+        exp.Label2 = semanticMenu.append('label').text("empty extracts passwords in the language").attr('style', 'margin-left:5px; margin-bottom:10px')
+        exp.testdiv2 = semanticMenu.append('div').attr('style', 'margin-bottom:10px')
 
         exp.btnSemanticFr.on('click', function () {
             getSemanticsFromUpload('fr');
@@ -307,7 +312,7 @@ var ParacoordUI = function (config, options) {
             updateHeatmapCore();
         });
 
-        exp.inputWordsAxis.on('change', function () {
+        exp.inputWordsAxis.on('focusout', function () {
             updateHeatmapCore();
         });
 
@@ -474,13 +479,12 @@ var ParacoordUI = function (config, options) {
     }
 
     var runPyScriptSemantic = function (input, lang, dict) {
-        var dataS = lang + "2431ecfe25e234d51b22ff47701d0fae" + input;
         $.ajax({
             crossDomain: true,
             type: "POST",
             url: "http://127.0.0.1:5000/semantic",
             async: false,
-            data: { mydata: dataS },
+            data: { lang: lang, hname : input },
             success: function printAndCallback(result) {
                 dict[input.hashCode()] = result
                 return result;
@@ -539,7 +543,7 @@ var ParacoordUI = function (config, options) {
             type: "POST",
             url: "http://127.0.0.1:5000/heatmapFromSemantic",
             async: false,
-            data: { mydata: dataS },
+            data: { hname: input, lang: lang, req:req },
             success: function printAndCallback(result) {
                 console.log(result)
                 dict[input.hashCode()] = result
@@ -572,7 +576,7 @@ var ParacoordUI = function (config, options) {
                 obj = dict[selected[i].getName().hashCode()]
                 var name = lang + " " + ui.exp.inputSemantic.node().value + " " + selected[i].getName()
                 if (selected[i].getIsSemantic() == false && (Object.entries(obj).length === 0 && obj.constructor === Object) == false) {
-                    createHm(obj, name)
+                    createHm(obj, name, selected[i].getState().maxCharFreq, selected[i].getName())
                 }
             }
         }
@@ -763,8 +767,8 @@ var ParacoordUI = function (config, options) {
     }
 
     var uploadWords = function (name, words, hmui) {
-        function runPyScriptUploadHeatmap(input, name, hmui) {
-            var dataS = name ;
+        function runPyScriptUploadHeatmap(input, name) {
+            var dataS = "" ;
             for (const [key, value] of Object.entries(input)) {
                 dataS += "2431ecfe25e234d51b22ff47701d0fae" + key + ',' + value
             }
@@ -773,7 +777,7 @@ var ParacoordUI = function (config, options) {
                 type: "POST",
                 url: "http://127.0.0.1:5000/uploadHeatmap",
                 async: true,
-                data: { mydata: dataS },
+                data: { hname : name,  words : dataS},
             }).always(function () {
                 document.getElementById('loadertxt'+name).innerText = "Semantic is ready"
                 document.getElementById('loader'+name).style.visibility = 'hidden';
@@ -1135,11 +1139,11 @@ var ParacoordUI = function (config, options) {
 
         return r;
     }
-    var createHm = function (words, name) {
+    var createHm = function (words, name, maxvalue, parentname) {
         var newhm = new Heatmap(name, false);
         newhm.isSemantic = false
         newhm.buildHeatmap(words);
-        var hmui = new HeatmapUI(newhm, self, config, options);
+        var hmui = new HeatmapUI(newhm, self, config, options, maxvalue, parentname);
         uploadComplete(name, words, hmui);
         return hmui;
     }

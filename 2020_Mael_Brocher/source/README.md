@@ -7,7 +7,7 @@ Then do :
 
     sudo apt-get install python3-pip
     pip install --upgrade pip
-    pip install setuptools wheel spacy flask langid
+    pip install setuptools wheel spacy flask fasttext
     python -m spacy download en_core_web_sm
     python -m spacy download fr_core_news_sm
     flask run 

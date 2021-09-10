@@ -40,7 +40,6 @@ var options = {
         "vowelsConsonantsalpha" : "aeiouybcdfghjklmnpqrstvwxzAEIOUYBCDFGHJKLMNPQRSTVWXZ",
         "vowelsConsonantsLow" : "aeiouybcdfghjklmnpqrstvwxz",
         "vowelsConsonantsHigh" : "AEIOUYBCDFGHJKLMNPQRSTVWXZ",
-
     },
     "colourSet"        : {
         "YlGn"           :["#ffffcc","#c2e699","#78c679","#31a354","#006837"],

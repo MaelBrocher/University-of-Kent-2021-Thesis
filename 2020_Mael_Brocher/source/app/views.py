@@ -8,7 +8,6 @@ import spacy
 from wordninja import wordninjaEn
 from wordninja import wordninjaFr
 import time
-from langdetect import detect
 import fasttext 
 
 
@@ -33,11 +32,11 @@ enfilenames.close()
 
 #check if wordninja didn't create small group of 1 letter, if yes it will be removed
 def remove(res):
-    i = 0
+    oneletterchunk = 0
     for r in res:
         if len(r) == 1:
-            i += 1
-    if i >= 4:
+            oneletterchunk += 1
+    if oneletterchunk >= 4:
         return True
     return False
 
@@ -126,10 +125,8 @@ def index():
 @app.route('/uploadHeatmap', methods=['POST'])
 def uploadHeatmap():
     if request.method == 'POST':
-        datafromjs = request.form['mydata']
-        wordlist = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
-        hname = wordlist[0]
-        wordlist.pop(0)
+        hname = request.form['hname']
+        wordlist = request.form['words'].split("2431ecfe25e234d51b22ff47701d0fae")
         wordlist = dict.fromkeys(wordlist, None)
         words = {}
 
@@ -142,17 +139,11 @@ def uploadHeatmap():
                     number = int(passw.split(',')[1])
                 except :
                     print(passw)
+                    continue
 
                 nlp, wordninja = englishSpacy, wordninjaEn
                 words[password] = [[], None, number]
                 words[password][1] = model.predict(password)[0][0][-2:]
-
-                if password.lower() in FrNamesLower or password.title() in FrNamesTitle or password.upper() in FrNamesUpper:
-                    words[password] = [['NAME'],'fr', number]
-                    continue
-                elif password.lower() in EnNamesLower or password.title() in EnNamesTitle or password.upper() in EnNamesUpper:
-                    words[password] = [['NAME'],'en', number]
-                    continue
 
                 nlp = englishSpacy if words[password][1] == 'en' else frenchSpacy if words[password][1]  == 'fr' else englishSpacy
                 wordninja = wordninjaEn if words[password][1] == 'en' else wordninjaFr if words[password][1]  == 'fr' else wordninjaEn
@@ -188,8 +179,9 @@ def uploadHeatmap():
 @app.route('/heatmapFromSemantic', methods=['POST'])
 def semantic_heatmap():
     if request.method == 'POST':
-        datafromjs = request.form['mydata']
-        hname, req, lang = [datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")[i] for i in (0, 1, 2)]
+        hname = request.form['hname']
+        req = request.form['req']
+        lang = request.form['lang']
         askedHeatmap = heatmaps.getHeatmapFromName(hname)
         if askedHeatmap != None:
             res = get_hm_from_semantic(askedHeatmap.getData(), req, lang)
@@ -206,11 +198,10 @@ def semantic_heatmap():
 @app.route('/semantic', methods=['POST'])
 def semantic():
     if request.method == 'POST':
-        datafromjs = request.form['mydata']
-        hnames = datafromjs.split("2431ecfe25e234d51b22ff47701d0fae")
-        lang, name = hnames[0], hnames[1]
+        lang = request.form['lang']
+        hname = request.form['hname']
         res = {}
-        askedHeatmap = heatmaps.getHeatmapFromName(name)
+        askedHeatmap = heatmaps.getHeatmapFromName(hname)
         if askedHeatmap != None:
             res = extractSemantic(askedHeatmap.getData(), lang)
         else :
